@@ -9,11 +9,18 @@ import Image from 'next/image';
 import { CheckCircle, CreditCard, MapPin, Truck, Plus, Home, Briefcase, Trash2, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import CreditCardForm from '../components/CreditCardForm';
+// Validating card fields
+import { validateCardField, isValidLuhn, isValidExpiry, isValidCVV, isValidName } from '../../utils/cardValidation';
+import { isStoreOpen, checkDeliveryAvailability } from '../../utils/storeLogic';
+import OTPModal from '../components/OTPModal';
 
 const CheckoutPage = () => {
     const { cart, cartTotal, clearCart } = useContext(CartContext);
-    const { user, addAddress, removeAddress } = useContext(UserContext);
+    const { user, addAddress, removeAddress, verifyPhone } = useContext(UserContext);
     const { createOrder } = useContext(OrderContext);
+
+    const [isOTPModalOpen, setIsOTPModalOpen] = useState(false);
+    const [storeStatus, setStoreStatus] = useState({ available: true, reason: '' });
 
     const [success, setSuccess] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -23,6 +30,21 @@ const CheckoutPage = () => {
     // Card State
     const [cardData, setCardData] = useState({ number: '', name: '', expiry: '', cvv: '', focus: '' });
     const [cardErrors, setCardErrors] = useState({});
+    const [touched, setTouched] = useState({});
+
+    const handleBlur = (field, value) => {
+        setTouched(prev => ({ ...prev, [field]: true }));
+        const error = validateCardField(field, value, cardData);
+        setCardErrors(prev => ({ ...prev, [field]: error }));
+    };
+
+    // Check strict validity for button state
+    const isCardValid = () => {
+        return isValidLuhn(cardData.number) &&
+            isValidExpiry(cardData.expiry) &&
+            isValidCVV(cardData.cvv) &&
+            isValidName(cardData.name);
+    };
 
     // Address State
     const [selectedAddressId, setSelectedAddressId] = useState(null);
@@ -59,10 +81,26 @@ const CheckoutPage = () => {
         setNewAddress({ ...newAddress, street: '', city: '', area: '' });
     };
 
-    // Placeholder for payment processing
+    // Placeholder for payment processing - Simulating 10% failure rate for realism
     const processPayment = async () => {
-        return new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
+        // Random 10% failure chance to demo error handling
+        if (Math.random() < 0.1) {
+            throw new Error("Transaction declined by bank. Please try another card.");
+        }
+        return true;
     };
+
+    // Store Availability Check
+    useEffect(() => {
+        if (selectedAddressId) {
+            const address = user.addresses.find(a => a.id === selectedAddressId);
+            if (address) {
+                const availability = checkDeliveryAvailability(address.city);
+                setStoreStatus(availability);
+            }
+        }
+    }, [selectedAddressId, user]);
 
     const handlePlaceOrder = async () => {
         if (!selectedAddressId) {
@@ -83,18 +121,40 @@ const CheckoutPage = () => {
                 toast.error("Phone number required for Cash on Delivery");
                 return;
             }
-        } else if (paymentMethod === 'card') {
-            const errors = {};
-            if (!cardData.number || cardData.number.length < 16) errors.number = "Invalid card number";
-            if (!cardData.name) errors.name = "Name on card is required";
-            if (!cardData.expiry || !/^\d{2}\/\d{2}$/.test(cardData.expiry)) errors.expiry = "Invalid expiry (MM/YY)";
-            if (!cardData.cvv || cardData.cvv.length < 3) errors.cvv = "Invalid CVC";
-
-            if (Object.keys(errors).length > 0) {
-                setCardErrors(errors);
-                toast.error("Please correct card details");
+            if (!user.phone_verified) {
+                setIsOTPModalOpen(true);
                 return;
             }
+        } else if (paymentMethod === 'card') {
+            const errors = {};
+            errors.number = validateCardField('number', cardData.number);
+            errors.expiry = validateCardField('expiry', cardData.expiry);
+            errors.cvv = validateCardField('cvv', cardData.cvv);
+            errors.name = validateCardField('name', cardData.name);
+
+            // Filter out nulls
+            const cleanErrors = Object.entries(errors).reduce((acc, [key, val]) => {
+                if (val) acc[key] = val;
+                return acc;
+            }, {});
+
+            if (Object.keys(cleanErrors).length > 0) {
+                setCardErrors(cleanErrors);
+                setTouched({ number: true, expiry: true, cvv: true, name: true });
+                toast.error("Please enter valid card details");
+                return;
+            }
+        }
+
+        // OTP Check for Card as well if needed, but critical for COD. Let's enforce for all first orders.
+        if (!user.phone_verified) {
+            setIsOTPModalOpen(true);
+            return;
+        }
+
+        if (!storeStatus.available) {
+            toast.error(storeStatus.reason);
+            return;
         }
 
         setIsProcessing(true);
@@ -109,7 +169,10 @@ const CheckoutPage = () => {
                 address: deliveryAddress,
                 paymentMethod,
                 deliveryTime,
-                paymentDetails: paymentMethod === 'card' ? { type: 'card', masked: '**' + cardData.number.slice(-4) } : { type: 'cod' }
+                deliveryTime,
+                paymentDetails: paymentMethod === 'card'
+                    ? { type: 'card', masked: '**' + cardData.number.slice(-4), token: 'tok_cheezybite_' + Math.random().toString(36).substr(2, 9) }
+                    : { type: 'cod' }
             });
 
             clearCart();
@@ -324,7 +387,13 @@ const CheckoutPage = () => {
 
                         {/* Secured Card Form */}
                         {paymentMethod === 'card' && (
-                            <CreditCardForm cardData={cardData} setCardData={setCardData} errors={cardErrors} />
+                            <CreditCardForm
+                                cardData={cardData}
+                                setCardData={setCardData}
+                                errors={cardErrors}
+                                touched={touched}
+                                handleBlur={handleBlur}
+                            />
                         )}
 
                         {/* COD Info */}
@@ -380,8 +449,8 @@ const CheckoutPage = () => {
 
                         <button
                             onClick={handlePlaceOrder}
-                            disabled={isProcessing}
-                            className={`w-full btn btn-lg text-white font-bold py-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 ${isProcessing ? 'bg-softBlack border border-cardBorder' : 'bg-gradient-to-r from-primary to-secondary hover:shadow-primary/20 transform hover:-translate-y-1'}`}
+                            disabled={isProcessing || (paymentMethod === 'card' && !isCardValid()) || !storeStatus.available}
+                            className={`w-full btn btn-lg text-white font-bold py-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 ${isProcessing || (paymentMethod === 'card' && !isCardValid()) || !storeStatus.available ? 'bg-softBlack border border-cardBorder opacity-50 cursor-not-allowed' : 'bg-gradient-to-r from-primary to-secondary hover:shadow-primary/20 transform hover:-translate-y-1'}`}
                         >
                             {isProcessing ? (
                                 <>
@@ -399,10 +468,29 @@ const CheckoutPage = () => {
                             <Truck className="w-3 h-3" />
                             <span>Secure Checkout with 256-bit Encryption</span>
                         </div>
+
+                        {!storeStatus.available && (
+                            <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-sm text-center">
+                                🚫 {storeStatus.reason}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
-        </div>
+
+            <OTPModal
+                isOpen={isOTPModalOpen}
+                onClose={() => setIsOTPModalOpen(false)}
+                phoneNumber={user?.phone || 'your number'}
+                onVerify={() => {
+                    verifyPhone();
+                    setIsOTPModalOpen(false);
+                    // Automatically trigger place order again or ask user to click? 
+                    // Better UX: Ask user to click "Place Order" again to confirm final intent, or just toast.
+                    toast.success("Phone verified! You can now place your order.");
+                }}
+            />
+        </div >
     );
 };
 

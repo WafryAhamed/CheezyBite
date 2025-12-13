@@ -42,7 +42,8 @@ export const UserProvider = ({ children }) => {
             id: 'u_' + Date.now(),
             name: email.split('@')[0],
             email: email,
-            phone: '+94 77 123 4567' // Default mock phone
+            phone: '+94 77 123 4567', // Default mock phone
+            phone_verified: true // Assume verified for repeat login demo
         };
 
         setUser(mockUser);
@@ -62,6 +63,7 @@ export const UserProvider = ({ children }) => {
             name,
             email,
             phone: '',
+            phone_verified: false,
             photo: null
         };
 
@@ -82,6 +84,7 @@ export const UserProvider = ({ children }) => {
             email: 'demo.user@gmail.com',
             photo: 'https://ui-avatars.com/api/?name=Demo+User&background=random',
             phone: '',
+            phone_verified: false,
             provider: 'google'
         };
 
@@ -135,6 +138,14 @@ export const UserProvider = ({ children }) => {
         toast.success("Default address updated");
     };
 
+    const verifyPhone = () => {
+        if (!user) return;
+        const updatedUser = { ...user, phone_verified: true };
+        setUser(updatedUser);
+        localStorage.setItem('cheezybite_user', JSON.stringify(updatedUser));
+        toast.success("Phone number verified successfully!");
+    };
+
     return (
         <UserContext.Provider value={{
             user,
@@ -148,6 +159,7 @@ export const UserProvider = ({ children }) => {
             addAddress,
             removeAddress,
             setAddressAsDefault,
+            verifyPhone,
             isAuthenticated: !!user
         }}>
             {children}
