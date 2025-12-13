@@ -33,7 +33,7 @@ const AdminLayout = ({ children }) => {
     useEffect(() => {
         if (loading) return;
 
-        if (!isAuthenticated) {
+        if (!isAuthenticated && pathname !== '/admin/login') {
             router.push('/admin/login');
             return;
         }

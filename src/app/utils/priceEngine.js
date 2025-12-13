@@ -13,13 +13,13 @@ const SIZE_MULTIPLIERS = {
 const CRUST_PRICES = {
   traditional: 0,
   classic: 0,
-  thin: 1.5,
-  stuffed: 3.0,
+  thin: 150,
+  stuffed: 350,
 };
 
 const TOPPING_CONFIG = {
   freeCount: 3,        // First 3 toppings are free
-  pricePerTopping: 2,  // $2 per extra topping
+  pricePerTopping: 150,  // Rs. 150 per extra topping
 };
 
 /**
@@ -61,7 +61,7 @@ export function getPriceBreakdown(basePrice, size, crust, toppings = []) {
   const sizeMultiplier = SIZE_MULTIPLIERS[size?.toLowerCase()] || SIZE_MULTIPLIERS.small;
   const sizedPrice = basePrice * sizeMultiplier;
   const crustPrice = CRUST_PRICES[crust?.toLowerCase()] || 0;
-  
+
   const toppingCount = toppings.length;
   const chargeableToppings = Math.max(0, toppingCount - TOPPING_CONFIG.freeCount);
   const toppingPrice = chargeableToppings * TOPPING_CONFIG.pricePerTopping;

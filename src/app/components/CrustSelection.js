@@ -1,29 +1,44 @@
+import { getCrustPrice } from "../utils/priceEngine";
+
 const CrustSelection = ({ crust, setCrust }) => {
+  const crusts = [
+    { id: 'traditional', name: 'Classic Hand Tossed', priceLabel: 'Included' },
+    { id: 'thin', name: 'Thin Crust', priceLabel: '+ LKR 150' },
+    { id: 'stuffed', name: 'Stuffed Cheese Crust', priceLabel: '+ LKR 350' }
+  ];
+
   return (
-    <div className="flex justify-center items-center lg:justify-start">
-      <div className="flex gap-x-12 mb-8 font-medium">
-        <label className="flex items-center gap-x-2 cursor-pointer">
-          <input
-            className="appearance-none w-4 h-4 border border-gray-400 rounded-full checked:bg-gradient-to-r checked:from-primary checked:to-secondary checked:border-secondary cursor-pointer"
-            type='radio'
-            name='crust'
-            value="traditional"
-            checked={crust === 'traditional'}
-            onChange={(e) => setCrust(e.target.value)}
-          />
-          Traditional
-        </label>
-        <label className="flex items-center gap-x-2 cursor-pointer">
-          <input
-            className="appearance-none w-4 h-4 border border-gray-400 rounded-full checked:bg-gradient-to-r checked:from-primary checked:to-secondary checked:border-secondary cursor-pointer"
-            type='radio'
-            name='crust'
-            value="thin"
-            checked={crust === 'thin'}
-            onChange={(e) => setCrust(e.target.value)}
-          />
-          Thin
-        </label>
+    <div className="mb-8">
+      <h3 className="text-sm font-bold text-ashWhite/60 uppercase tracking-wider mb-4">Choose Crust <span className="text-primary">*</span></h3>
+      <div className="space-y-3">
+        {crusts.map((c) => (
+          <label
+            key={c.id}
+            className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all ${crust === c.id
+                ? 'bg-softBlack border-primary shadow-lg shadow-primary/10'
+                : 'bg-softBlack/40 border-white/10 hover:bg-white/5'
+              }`}
+          >
+            <div className="flex items-center gap-3">
+              <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${crust === c.id ? 'border-primary' : 'border-white/30'
+                }`}>
+                {crust === c.id && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+              </div>
+              <span className={`font-bold text-ashWhite ${crust === c.id ? 'text-primary' : ''}`}>{c.name}</span>
+            </div>
+            <span className="text-sm text-ashWhite/60 font-medium">
+              {c.priceLabel}
+            </span>
+            <input
+              type='radio'
+              name='crust'
+              value={c.id}
+              checked={crust === c.id}
+              onChange={(e) => setCrust(e.target.value)}
+              className="hidden"
+            />
+          </label>
+        ))}
       </div>
     </div>
   )

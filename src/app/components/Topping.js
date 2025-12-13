@@ -3,46 +3,43 @@ import { Check, CircleDot, Bean, Leaf, Flame, Layers, Circle } from 'lucide-reac
 
 const Topping = ({ topping, additionalTopping, setAdditionalTopping }) => {
   const [isChecked, setIsChecked] = useState(false);
-  const handleCheckBox = () => {
-    setIsChecked(!isChecked);
-  }
 
-  const handleTopping = () => {
-    if (isChecked) {
-      const newToppings = new Set([...additionalTopping, { ...topping }]);
-      setAdditionalTopping(Array.from(newToppings));
+  // Check if this topping is already in the list (for Edit mode compliance)
+  useEffect(() => {
+    setIsChecked(additionalTopping.some(t => t.name === topping.name));
+  }, [additionalTopping, topping.name]);
+
+  const handleCheckBox = () => {
+    const newState = !isChecked;
+    setIsChecked(newState);
+
+    if (newState) {
+      // Check limits if needed, but for now just add
+      const newToppings = [...additionalTopping, { ...topping }];
+      // Unique check handled by set logic usually, but here simple push
+      setAdditionalTopping(newToppings);
     } else {
-      const newToppings = additionalTopping.filter((toppingObj) => {
-        return toppingObj.name !== topping.name;
-      });
+      const newToppings = additionalTopping.filter((t) => t.name !== topping.name);
       setAdditionalTopping(newToppings);
     }
   };
 
-  useEffect(() => {
-    handleTopping();
-  }, [isChecked]);
-
-  const getIcon = (name) => {
-    const n = name.toLowerCase();
-    if (n.includes('cherry')) return <CircleDot className="w-8 h-8 text-red-500" />;
-    if (n.includes('corn')) return <CircleDot className="w-8 h-8 text-yellow-400" />; // Fallback if no Corn icon
-    if (n.includes('fresh tomatoes')) return <Circle className="w-8 h-8 text-red-600" />;
-    if (n.includes('jalapeno')) return <Flame className="w-8 h-8 text-green-600" />;
-    if (n.includes('parmesan')) return <Layers className="w-8 h-8 text-yellow-200" />;
-    return <Leaf className="w-8 h-8 text-green-400" />;
-  };
-
   return (
-    <div className={`${isChecked && 'border-orange'} w-full max-w-[110px] h-[140px] p-4 flex flex-col items-center justify-center border rounded-md bg-softBlack/40 relative cursor-pointer hover:bg-white/5 transition-colors`} onClick={handleCheckBox}>
-      <div className="mb-2">
-        {getIcon(topping.name)}
+    <div
+      onClick={handleCheckBox}
+      className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all mb-2 ${isChecked
+          ? 'bg-softBlack border-primary'
+          : 'bg-transparent border-white/5 hover:bg-white/5'
+        }`}
+    >
+      <div className="flex items-center gap-3">
+        <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-primary border-primary' : 'border-white/30'
+          }`}>
+          {isChecked && <Check className="w-3.5 h-3.5 text-white" />}
+        </div>
+        <span className="text-ashWhite font-medium capitalize">{topping.name}</span>
       </div>
-      <div className="text-sm capitalize text-center font-medium text-ashWhite">{topping.name}</div>
-      <input className="hidden" type='checkbox' checked={isChecked} readOnly />
-      <div className={`${isChecked ? 'opacity-100 scale-100' : 'opacity-0 scale-0'} absolute top-2 right-2 transition-all duration-200`}>
-        <Check className="text-xl text-orange" />
-      </div>
+      <span className="text-xs text-ashWhite/60">+ LKR 150</span>
     </div>
   )
 };
