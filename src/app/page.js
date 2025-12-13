@@ -1,4 +1,4 @@
-// Force re-compile
+// Force Re-compile 2
 import Banner from './components/Banner';
 import { getPizzas } from './utils/pizzaStore';
 import { BestSellers, Highlights, HowItWorks, OffersBanner, SocialProof } from './components/LandingSections';

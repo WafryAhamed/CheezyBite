@@ -2,12 +2,18 @@
 
 import React, { useContext, useState } from 'react';
 import { CartContext } from '../context/CartContext';
+import { useUser } from '../context/UserContext';
 import CartItem from '../components/CartItem';
+import AuthModal from '../components/AuthModal';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 export default function CartPage() {
     const { cart, cartTotal, isOpen, setIsOpen } = useContext(CartContext);
+    const { isAuthenticated } = useUser();
+    const router = useRouter();
+    const [authModalOpen, setAuthModalOpen] = useState(false);
 
     // Coupon State
     const [couponCode, setCouponCode] = useState('');
@@ -35,6 +41,14 @@ export default function CartPage() {
         setIsApplied(false);
         setCouponCode('');
         toast.success('Coupon removed');
+    };
+
+    const handleCheckout = () => {
+        if (isAuthenticated) {
+            router.push('/checkout');
+        } else {
+            setAuthModalOpen(true);
+        }
     };
 
     if (cart.length === 0) {
@@ -129,9 +143,12 @@ export default function CartPage() {
                             </div>
                         </div>
 
-                        <Link href="/checkout" className="w-full block text-center btn btn-lg bg-gradient-to-r from-primary to-secondary text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-primary/20 transition-all transform hover:-translate-y-1">
+                        <button
+                            onClick={handleCheckout}
+                            className="w-full block text-center btn btn-lg bg-gradient-to-r from-primary to-secondary text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-primary/20 transition-all transform hover:-translate-y-1"
+                        >
                             Proceed to Checkout
-                        </Link>
+                        </button>
 
                         <Link href="/menu" className="block text-center mt-4 text-ashWhite/60 hover:text-ashWhite text-sm hover:underline">
                             Continue Shopping
@@ -164,7 +181,15 @@ export default function CartPage() {
                     ))}
                 </div>
             </div>
+
+            {/* Auth Modal */}
+            <AuthModal
+                isOpen={authModalOpen}
+                onClose={() => setAuthModalOpen(false)}
+                onSuccess={() => router.push('/checkout')}
+            />
         </div>
     );
 
 }
+
