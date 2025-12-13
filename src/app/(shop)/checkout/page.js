@@ -332,24 +332,45 @@ const CheckoutPage = () => {
                                     <div
                                         key={addr.id}
                                         onClick={() => setSelectedAddressId(addr.id)}
-                                        className={`relative p-4 rounded-xl border cursor-pointer transition-all hover:shadow-lg ${selectedAddressId === addr.id ? 'border-primary bg-primary/10' : 'border-cardBorder bg-softBlack'}`}
+                                        className={`relative p-5 rounded-2xl border-2 cursor-pointer transition-all hover:shadow-lg group bg-softBlack ${selectedAddressId === addr.id ? 'border-primary bg-primary/5' : 'border-cardBorder hover:border-ashWhite/20'}`}
                                     >
-                                        <div className="flex justify-between items-start mb-2">
-                                            <div className="flex items-center gap-2 font-bold text-ashWhite">
-                                                {addr.label === 'Home' ? <Home className="w-4 h-4" /> : <Briefcase className="w-4 h-4" />}
-                                                {addr.label}
+                                        <div className="flex justify-between items-start mb-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`p-2 rounded-full ${selectedAddressId === addr.id ? 'bg-primary text-white' : 'bg-charcoalBlack text-ashWhite/60'}`}>
+                                                    {addr.label === 'Home' ? <Home className="w-5 h-5" /> : <Briefcase className="w-5 h-5" />}
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-ashWhite text-lg leading-tight">{addr.label}</h4>
+                                                    <p className="text-xs text-ashWhite/40 font-bold uppercase tracking-wider">Address</p>
+                                                </div>
                                             </div>
-                                            <button onClick={(e) => { e.stopPropagation(); removeAddress(addr.id); }} className="text-ashWhite/40 hover:text-red-500">
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
                                         </div>
-                                        <p className="text-sm text-ashWhite/80">{addr.street}</p>
-                                        <p className="text-sm text-ashWhite/60">{addr.city} {addr.area && `, ${addr.area}`}</p>
-                                        <p className="text-sm text-ashWhite/60 mt-1">📞 {addr.phone}</p>
 
-                                        {selectedAddressId === addr.id && (
-                                            <div className="absolute top-4 right-4 text-primary bg-primary/20 rounded-full p-1"><CheckCircle className="w-4 h-4" /></div>
-                                        )}
+                                        <div className="space-y-1 pl-1">
+                                            <p className="text-ashWhite font-medium leading-snug">{addr.street}, {addr.area}</p>
+                                            <p className="text-sm text-ashWhite/60">{addr.city}</p>
+                                            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-dashed border-ashWhite/10">
+                                                <span className="text-xs text-ashWhite/40 font-bold uppercase">Phone</span>
+                                                <span className="text-sm text-primary font-mono">{addr.phone}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div className="absolute top-4 right-4 flex gap-2">
+                                            {selectedAddressId === addr.id && (
+                                                <div className="text-primary bg-primary/20 rounded-full p-1.5 animate-in zoom-in">
+                                                    <CheckCircle className="w-5 h-5" />
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); removeAddress(addr.id); }}
+                                            className="absolute bottom-4 right-4 p-2 text-ashWhite/20 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-all"
+                                            title="Remove Address"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
                                     </div>
                                 ))
                             ) : (
@@ -446,17 +467,17 @@ const CheckoutPage = () => {
                         <div className="flex flex-col gap-4 mb-6 max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-primary scrollbar-track-softBlack pr-2">
                             {cart.map((item, index) => (
                                 <div key={index} className="flex gap-4 items-center">
-                                    <div className="w-16 h-16 bg-charcoalBlack rounded-lg flex items-center justify-center relative flex-shrink-0">
-                                        <Image src={item.image} alt={item.name} width={60} height={60} className="object-contain" />
-                                        <span className="absolute -top-2 -right-2 w-5 h-5 bg-primary text-white text-xs font-bold rounded-full flex items-center justify-center border border-softBlack">
+                                    <div className="w-20 h-20 bg-charcoalBlack rounded-xl flex items-center justify-center relative flex-shrink-0 border border-cardBorder">
+                                        <Image src={item.image} alt={item.name} width={70} height={70} className="object-contain" />
+                                        <span className="absolute -top-3 -right-3 w-6 h-6 bg-primary text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-softBlack shadow-lg z-10">
                                             {item.amount}
                                         </span>
                                     </div>
-                                    <div className="flex-1">
+                                    <div className="flex-1 min-w-0">
                                         <h4 className="text-sm font-bold text-ashWhite line-clamp-1">{item.name}</h4>
-                                        <p className="text-xs text-ashWhite/60">{item.size}, {item.crust}</p>
+                                        <p className="text-xs text-ashWhite/60 truncate">{item.size}, {item.crust}</p>
                                     </div>
-                                    <div className="text-sm font-bold text-secondary">
+                                    <div className="text-sm font-bold text-secondary whitespace-nowrap">
                                         Rs. {(item.price * item.amount).toLocaleString()}
                                     </div>
                                 </div>
