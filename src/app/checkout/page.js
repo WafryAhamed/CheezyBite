@@ -6,8 +6,9 @@ import { UserContext } from '../context/UserContext';
 import { OrderContext } from '../context/OrderContext';
 import Link from 'next/link';
 import Image from 'next/image';
-import { CheckCircle, CreditCard, MapPin, Truck, Plus, Home, Briefcase, Trash2 } from 'lucide-react';
+import { CheckCircle, CreditCard, MapPin, Truck, Plus, Home, Briefcase, Trash2, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import CreditCardForm from '../components/CreditCardForm';
 
 const CheckoutPage = () => {
     const { cart, cartTotal, clearCart } = useContext(CartContext);
@@ -15,8 +16,13 @@ const CheckoutPage = () => {
     const { createOrder } = useContext(OrderContext);
 
     const [success, setSuccess] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState('cash'); // Default to Cash as it's easier for demos
     const [deliveryTime, setDeliveryTime] = useState('asap');
+
+    // Card State
+    const [cardData, setCardData] = useState({ number: '', name: '', expiry: '', cvc: '', focus: '' });
+    const [cardErrors, setCardErrors] = useState({});
 
     // Address State
     const [selectedAddressId, setSelectedAddressId] = useState(null);
