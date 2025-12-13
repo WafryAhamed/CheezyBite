@@ -1,54 +1,29 @@
-'use client';
-
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { notFound } from 'next/navigation';
-import Image from 'next/image';
-import PizzaDetails from '../../components/PizzaDetails';
 import { getPizzas } from '../../utils/pizzaStore';
+import PizzaClient from './PizzaClient';
 
-export default function PizzaPage({ params }) {
-    const [pizza, setPizza] = useState(null);
-    const [loading, setLoading] = useState(true);
+export default async function PizzaPage({ params }) {
+    // In Next.js 15+, params is a Promise. We need to await it.
+    // However, if we assume 14 or older or standard behavior where it might be async in future context:
+    // Safer to treat params as potentially async or use it directly if guaranteed.
+    // Given the project setup, let's look at how it accessed it before: params.id directly.
+    // We'll trust Next.js will resolve it or it's an object. 
+    // BUT for safety in newer versions, we can just access it.
 
-    // Unwrap params using React.use() or access directly depending on Next.js version (assuming 15+ async params, but here safe to use effect or async component)
-    // Since this is a client component ('use client'), we need to handle params carefully if they are promises in newer Next.js.
-    // Ideally, pages should be server components, but PizzaDetails uses client hooks.
-    // For simplicity relative to the existing codebase, we'll try to find the pizza synchronously if possible, or use an effect.
+    // NOTE: 'params' prop in App Router pages is an object in many versions, 
+    // but in latest Next.js 15 canary it's a promise. 
+    // I'll try to access it directly as likely it's Next 14/13. 
+    // Update: If it fails, we wrap in await `params`.
 
-    // Actually, getPizzas is sync in this project.
-    const id = params.id;
+    const { id } = await params;
 
-    useEffect(() => {
-        const allPizzas = getPizzas();
-        const foundPizza = allPizzas.find(p => p.id.toString() === id);
-        if (foundPizza) {
-            setPizza(foundPizza);
-        }
-        setLoading(false);
-    }, [id]);
+    const allPizzas = getPizzas();
+    const pizza = allPizzas.find(p => p.id.toString() === id);
 
-    if (!loading && !pizza) {
-        return notFound();
+    if (!pizza) {
+        notFound();
     }
 
-    if (loading || !pizza) {
-        return (
-            <div className="min-h-screen bg-jetBlack flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-            </div>
-        );
-    }
-
-    // PizzaDetails expects { pizza, modal, setModal }
-    // Since we are on a dedicated page, 'modal' state relates to closing it. 
-    // We can pass dummy setModal or handle it to redirect back.
-
-    // We'll wrap it in a container that mimics the modal style but full page
-    return (
-        <div className="min-h-screen bg-jetBlack pt-24 pb-12 px-4 flex items-center justify-center">
-            <div className="bg-softBlack w-full max-w-[1000px] rounded-[30px] shadow-2xl overflow-hidden border border-cardBorder p-4 md:p-8 relative">
-                <PizzaDetails pizza={pizza} modal={true} setModal={() => { }} />
-            </div>
-        </div>
-    );
+    return <PizzaClient pizza={pizza} />;
 }
