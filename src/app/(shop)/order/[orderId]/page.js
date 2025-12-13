@@ -4,6 +4,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { OrderContext } from '../../../context/OrderContext';
 import { Package, Clock, MapPin, CheckCircle, Phone, ChefHat, Flame, Truck, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import SupportCard from '../../../components/SupportCard';
 
 const OrderPage = ({ params }) => {
     const { orderId } = React.use(params);
@@ -184,17 +185,20 @@ const OrderPage = ({ params }) => {
 
             <div className="grid lg:grid-cols-3 gap-8">
                 {/* Help Section */}
-                <div className="lg:col-span-2">
+                <div className="lg:col-span-2 space-y-6">
+                    <SupportCard />
+
+                    {/* Cancel Logic Section - Restored */}
                     <div className="bg-softBlack border border-cardBorder rounded-2xl p-6 flex flex-col sm:flex-row justify-between items-center gap-6">
                         <div>
-                            <h3 className="text-xl font-bold text-ashWhite mb-1">Need help with your order?</h3>
-                            <p className="text-ashWhite/60 text-sm">Our support team is available 24/7</p>
+                            <h3 className="text-xl font-bold text-ashWhite mb-1">Manage Order</h3>
+                            {currentStageIndex > 0 && currentStageIndex < 4 && currentOrder.status !== 'Cancelled' && (
+                                <p className="text-ashWhite/60 text-sm">
+                                    Cancellation is only available before preparation begins.
+                                </p>
+                            )}
                         </div>
                         <div className="flex gap-4">
-                            <button className="flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-full text-ashWhite font-bold transition-all">
-                                <Phone className="w-4 h-4" /> Call Support
-                            </button>
-
                             {/* Cancel Button - Only show if not delivered or cancelled */}
                             {currentStageIndex < 4 && currentOrder.status !== 'Cancelled' && (
                                 <button
@@ -206,15 +210,10 @@ const OrderPage = ({ params }) => {
                                         }`}
                                 >
                                     <AlertCircle className="w-4 h-4" />
-                                    {currentStageIndex > 0 ? 'Cannot Cancel' : 'Cancel Order (Available for 15s)'}
+                                    {currentStageIndex > 0 ? 'Cannot Cancel' : 'Cancel Order'}
                                 </button>
                             )}
                         </div>
-                        {currentStageIndex > 0 && currentStageIndex < 4 && currentOrder.status !== 'Cancelled' && (
-                            <div className="w-full text-center sm:text-right sm:w-auto mt-2 sm:mt-0 text-xs text-ashWhite/40">
-                                Order can no longer be cancelled as preparation has started.
-                            </div>
-                        )}
                     </div>
                 </div>
 

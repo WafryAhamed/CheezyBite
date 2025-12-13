@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Phone, Mail, MapPin } from 'lucide-react';
+import SupportCard from './SupportCard';
 
 const Footer = () => {
   return (
@@ -19,20 +20,10 @@ const Footer = () => {
 
           {/* Contact Info */}
           <div className="flex flex-col items-center md:items-start gap-4">
-            <h3 className="text-ashWhite font-semibold text-lg">Contact Us</h3>
-            <div className="space-y-3 text-ashWhite/80 text-sm">
-              <div className="flex items-center gap-3">
-                <Phone className="w-4 h-4 text-secondary" />
-                <span>+94 11 234 5678</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Mail className="w-4 h-4 text-secondary" />
-                <span>info@cheezybite.lk</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <MapPin className="w-4 h-4 text-secondary" />
-                <span>Colombo, Sri Lanka</span>
-              </div>
+            <SupportCard compact={true} />
+            <div className="flex items-center gap-3 mt-4 text-ashWhite/60 text-xs">
+              <MapPin className="w-4 h-4 text-secondary" />
+              <span>Colombo, Sri Lanka</span>
             </div>
           </div>
 

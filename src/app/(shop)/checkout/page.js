@@ -15,6 +15,7 @@ import CreditCardForm from '../../components/CreditCardForm';
 import { validateCardField, isValidLuhn, isValidExpiry, isValidCVV, isValidName } from '../../../utils/cardValidation';
 import { isStoreOpen, checkDeliveryAvailability } from '../../../utils/storeLogic';
 import OTPModal from '../../components/OTPModal';
+import SupportCard from '../../components/SupportCard';
 
 const CheckoutPage = () => {
     const router = useRouter();
@@ -516,6 +517,10 @@ const CheckoutPage = () => {
                                 </>
                             )}
                         </button>
+
+                        <div className="mt-8">
+                            <SupportCard />
+                        </div>
 
                         {/* Payment Failure UI */}
                         {paymentStatus === 'error' && (
