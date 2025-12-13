@@ -4,11 +4,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { useContext, useState, useEffect, useRef } from "react";
 import { CartContext } from "../context/CartContext";
-import { Menu, X, ShoppingBag, User, Phone } from "lucide-react";
+import { UserContext } from "../context/UserContext";
+import { Menu, X, ShoppingBag, User } from "lucide-react";
+import AuthModal from "./AuthModal";
 
 const Nav = () => {
   const { isOpen, setIsOpen, itemAmount } = useContext(CartContext);
+  const { user } = useContext(UserContext);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [cartBounce, setCartBounce] = useState(false);
   const prevItemAmount = useRef(itemAmount);
@@ -43,7 +47,7 @@ const Nav = () => {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
+        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${scrolled
           ? "bg-charcoalBlack/95 backdrop-blur-sm shadow-lg py-2"
           : "bg-charcoalBlack py-4"
           }`}
@@ -84,10 +88,23 @@ const Nav = () => {
 
           {/* Right: Actions (Cart + Login) */}
           <div className="flex items-center gap-4">
-            {/* Desktop Login */}
-            <Link href="/auth" className="hidden lg:flex items-center gap-2 text-ashWhite hover:text-white transition-colors text-sm font-bold uppercase tracking-wide">
-              <span>Login / Guest</span>
-            </Link>
+            {/* Desktop Login / Profile */}
+            {user ? (
+              <Link href="/profile" className="hidden lg:flex items-center gap-2 text-ashWhite hover:text-white transition-colors text-sm font-bold uppercase tracking-wide">
+                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center border border-primary/40 overflow-hidden relative">
+                  {user.photo ? <Image src={user.photo} fill alt="User" className="object-cover" /> : <User className="w-4 h-4 text-primary" />}
+                </div>
+                <span>{user.name.split(' ')[0]}</span>
+              </Link>
+            ) : (
+              <button
+                onClick={() => setAuthModalOpen(true)}
+                className="hidden lg:flex items-center gap-2 text-ashWhite hover:text-white transition-colors text-sm font-bold uppercase tracking-wide"
+              >
+                <User className="w-5 h-5" />
+                <span>Login</span>
+              </button>
+            )}
 
             {/* Cart Icon */}
             <button
@@ -124,20 +141,39 @@ const Nav = () => {
                 </li>
               ))}
             </ul>
-            <Link
-              href="/auth"
-              onClick={closeMobileMenu}
-              className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-ashWhite py-4 rounded-xl transition-all duration-200 font-bold uppercase tracking-wide"
-            >
-              <User className="w-5 h-5" />
-              <span>Login / Guest</span>
-            </Link>
+
+            {user ? (
+              <Link
+                href="/profile"
+                onClick={closeMobileMenu}
+                className="flex items-center justify-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary py-4 rounded-xl transition-all duration-200 font-bold uppercase tracking-wide"
+              >
+                <div className="w-6 h-6 rounded-full overflow-hidden relative">
+                  {user.photo ? <Image src={user.photo} fill alt="User" className="object-cover" /> : <User className="w-4 h-4" />}
+                </div>
+                <span>My Profile</span>
+              </Link>
+            ) : (
+              <button
+                onClick={() => { closeMobileMenu(); setAuthModalOpen(true); }}
+                className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-ashWhite py-4 rounded-xl transition-all duration-200 font-bold uppercase tracking-wide"
+              >
+                <User className="w-5 h-5" />
+                <span>Login</span>
+              </button>
+            )}
           </div>
         </div>
       </nav>
 
       {/* Spacer to prevent content overlap */}
       <div className="h-16"></div>
+
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        onSuccess={() => setAuthModalOpen(false)}
+      />
     </>
   );
 };

@@ -25,7 +25,7 @@ const modalStyles = {
 
 const AuthModal = ({ isOpen, onClose, onSuccess }) => {
     const [isLogin, setIsLogin] = useState(true);
-    const { login, register } = useUser();
+    const { login, register, loginWithGoogle } = useUser();
     const [formData, setFormData] = useState({ name: '', email: '', password: '' });
 
     const handleChange = (e) => {
@@ -73,6 +73,31 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
                     <p className="text-ashWhite/60 text-sm">
                         {isLogin ? 'Please log in to place your order' : 'Create an account to continue'}
                     </p>
+                </div>
+
+                <div className="space-y-4 mb-6">
+                    <button
+                        onClick={async () => {
+                            const success = await loginWithGoogle();
+                            if (success) {
+                                if (onSuccess) onSuccess();
+                                onClose();
+                            }
+                        }}
+                        className="w-full bg-white text-black font-bold py-3 rounded-xl flex items-center justify-center gap-3 hover:bg-gray-100 transition-colors"
+                    >
+                        <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
+                        Continue with Google
+                    </button>
+
+                    <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                            <span className="w-full border-t border-cardBorder"></span>
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-softBlack px-2 text-ashWhite/40">Or continue with email</span>
+                        </div>
+                    </div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">

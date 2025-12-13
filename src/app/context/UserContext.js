@@ -61,12 +61,34 @@ export const UserProvider = ({ children }) => {
             id: 'u_' + Date.now(),
             name,
             email,
-            phone: ''
+            phone: '',
+            photo: null
         };
 
         setUser(newUser);
         localStorage.setItem('cheezybite_user', JSON.stringify(newUser));
         toast.success(`Welcome to CheezyBite, ${name}!`);
+        return true;
+    };
+
+    const loginWithGoogle = async () => {
+        setLoading(true);
+        // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        const mockGoogleUser = {
+            id: 'g_' + Date.now(),
+            name: 'Demo User',
+            email: 'demo.user@gmail.com',
+            photo: 'https://ui-avatars.com/api/?name=Demo+User&background=random',
+            phone: '',
+            provider: 'google'
+        };
+
+        setUser(mockGoogleUser);
+        localStorage.setItem('cheezybite_user', JSON.stringify(mockGoogleUser));
+        toast.success(`Welcome back, ${mockGoogleUser.name}!`);
+        setLoading(false);
         return true;
     };
 
@@ -88,6 +110,7 @@ export const UserProvider = ({ children }) => {
             user,
             loading,
             login,
+            loginWithGoogle,
             register,
             logout,
             updateUser,
