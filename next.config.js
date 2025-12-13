@@ -12,6 +12,12 @@ const nextConfig = {
         hostname: 'lh3.googleusercontent.com',
       }
     ],
+    // Allow local images with AND without query strings (wildcard)
+    localPatterns: [
+      {
+        pathname: '/**',
+      },
+    ],
   },
   experimental: {
     appDir: true,
