@@ -4,8 +4,10 @@ import React, { createContext, useState, useEffect, useCallback, useContext } fr
 import {
     loadPizzas, savePizzas,
     loadToppings, saveToppings,
+    loadPizzas, savePizzas,
+    loadToppings, saveToppings,
     loadAllOrders, saveAllOrders, updateOrderStatus as updateOrderInStorage,
-    isAdminLoggedIn, adminLogin as doAdminLogin, adminLogout as doAdminLogout,
+    isAdminLoggedIn, adminLogin as doAdminLogin, adminLogout as doAdminLogout, getAdminRole,
     getAnalyticsData,
     DEFAULT_PIZZAS, DEFAULT_TOPPINGS
 } from '../utils/adminStorageHelper';
@@ -23,6 +25,7 @@ export const useAdmin = () => {
 
 export const AdminProvider = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [userRole, setUserRole] = useState(null);
     const [pizzas, setPizzas] = useState([]);
     const [toppings, setToppings] = useState([]);
     const [orders, setOrders] = useState([]);
@@ -32,6 +35,7 @@ export const AdminProvider = ({ children }) => {
     // Load initial data
     useEffect(() => {
         setIsAuthenticated(isAdminLoggedIn());
+        setUserRole(getAdminRole());
         setPizzas(loadPizzas());
         setToppings(loadToppings());
         setOrders(loadAllOrders());
@@ -47,13 +51,14 @@ export const AdminProvider = ({ children }) => {
     }, [orders, loading]);
 
     // ============ AUTH ============
-    const login = useCallback((password) => {
-        const success = doAdminLogin(password);
+    const login = useCallback((username, password) => {
+        const success = doAdminLogin(username, password);
         setIsAuthenticated(success);
         if (success) {
+            setUserRole(getAdminRole());
             toast.success('Welcome back, Admin!');
         } else {
-            toast.error('Invalid password');
+            toast.error('Invalid username or password');
         }
         return success;
     }, []);
@@ -61,6 +66,7 @@ export const AdminProvider = ({ children }) => {
     const logout = useCallback(() => {
         doAdminLogout();
         setIsAuthenticated(false);
+        setUserRole(null);
         toast.success('Logged out successfully');
     }, []);
 
@@ -167,6 +173,7 @@ export const AdminProvider = ({ children }) => {
     const value = {
         // Auth
         isAuthenticated,
+        userRole,
         login,
         logout,
         // Pizzas

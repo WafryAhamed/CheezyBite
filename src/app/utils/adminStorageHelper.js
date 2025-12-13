@@ -139,28 +139,47 @@ export function updateOrderStatus(orderId, newStage, message = '') {
 
 // ============ ADMIN AUTH ============
 
+// ============ ADMIN AUTH ============
+
 export function isAdminLoggedIn() {
     if (!isBrowser()) return false;
     try {
         const auth = localStorage.getItem(ADMIN_AUTH_KEY);
-        return auth === 'true';
+        // Check if there is also a role, otherwise invalid
+        const role = localStorage.getItem(ADMIN_AUTH_KEY + '_role');
+        return auth === 'true' && !!role;
     } catch {
         return false;
     }
 }
 
-export function adminLogin(password) {
-    // Mock authentication - password is "admin123"
-    if (password === 'admin123') {
+export function getAdminRole() {
+    if (!isBrowser()) return null;
+    return localStorage.getItem(ADMIN_AUTH_KEY + '_role');
+}
+
+export function adminLogin(username, password) {
+    // Super Admin: admin / Admin@123
+    if (username === 'admin' && password === 'Admin@123') {
         localStorage.setItem(ADMIN_AUTH_KEY, 'true');
+        localStorage.setItem(ADMIN_AUTH_KEY + '_role', 'Super Admin');
         return true;
     }
+
+    // Manager: manager / Manager@123
+    if (username === 'manager' && password === 'Manager@123') {
+        localStorage.setItem(ADMIN_AUTH_KEY, 'true');
+        localStorage.setItem(ADMIN_AUTH_KEY + '_role', 'Manager');
+        return true;
+    }
+
     return false;
 }
 
 export function adminLogout() {
     if (!isBrowser()) return;
     localStorage.removeItem(ADMIN_AUTH_KEY);
+    localStorage.removeItem(ADMIN_AUTH_KEY + '_role');
 }
 
 // ============ ANALYTICS DATA ============
@@ -233,7 +252,7 @@ export default {
     loadPizzas, savePizzas,
     loadToppings, saveToppings,
     loadAllOrders, saveAllOrders, addOrder, updateOrderStatus,
-    isAdminLoggedIn, adminLogin, adminLogout,
+    isAdminLoggedIn, adminLogin, adminLogout, getAdminRole,
     getAnalyticsData,
     DEFAULT_PIZZAS, DEFAULT_TOPPINGS
 };
