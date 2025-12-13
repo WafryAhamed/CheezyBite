@@ -18,7 +18,7 @@
 
 @layer base {
   body {
-    @apply bg-cream text-charcoal antialiased scrollbar-thin scrollbar-thumb-primary scrollbar-track-cream;
+    @apply bg-jetBlack text-ashWhite antialiased scrollbar-thin scrollbar-thumb-primary scrollbar-track-charcoalBlack;
   }
 
   .btn {
@@ -34,11 +34,11 @@
   }
 
   .btn-primary {
-    @apply bg-primary text-white shadow-lg hover:shadow-primary/25 hover:bg-primaryHover hover:-translate-y-1;
+    @apply bg-primary text-white shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:bg-primaryHover hover:-translate-y-1;
   }
 
   .btn-secondary {
-    @apply bg-white text-charcoal hover:bg-lightGray border border-black/5 shadow-sm;
+    @apply bg-accent text-white hover:bg-secondary shadow-lg shadow-secondary/20 hover:shadow-secondary/40 border-none;
   }
 
   .input {
@@ -51,11 +51,11 @@
 
   .input,
   .textarea {
-    @apply bg-white text-charcoal outline-none focus:ring-2 focus:ring-primary/20 rounded-lg border border-black/10 font-medium placeholder:text-charcoal/40 transition-all duration-300;
+    @apply bg-softBlack text-ashWhite outline-none focus:ring-2 focus:ring-primary/50 rounded-lg border border-cardBorder font-medium placeholder:text-smokeGray transition-all duration-300;
   }
 
   .gradient {
-    @apply bg-gradient-to-r from-primary to-primaryHover text-white transition-all duration-500 shadow-lg hover:shadow-primary/30;
+    @apply bg-gradient-to-r from-primary to-secondary text-white transition-all duration-500 shadow-lg hover:shadow-primary/30;
   }
 }
 

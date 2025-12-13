@@ -52,8 +52,8 @@ const Nav = () => {
     <>
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
-          ? "bg-charcoal/95 backdrop-blur-sm shadow-lg py-2"
-          : "bg-charcoal py-3"
+          ? "bg-charcoalBlack/95 backdrop-blur-sm shadow-lg py-2"
+          : "bg-charcoalBlack py-3"
           }`}
       >
         <div className="container mx-auto flex items-center justify-between px-4">
@@ -82,7 +82,7 @@ const Nav = () => {
             {/* Phone Info */}
             <div className="flex gap-x-3 items-center border-l border-white/20 pl-6">
               <Phone className="w-8 h-8 text-secondary" />
-              <div className="text-white">
+              <div className="text-ashWhite">
                 <div className="font-robotoCondensed uppercase font-medium leading-none text-xs">
                   24/7 delivery
                 </div>
@@ -99,9 +99,9 @@ const Nav = () => {
                 }`}
               aria-label="Shopping cart"
             >
-              <ShoppingBag className="w-6 h-6 text-white" />
+              <ShoppingBag className="w-6 h-6 text-ashWhite" />
               {itemAmount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-secondary text-charcoal text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-secondary text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
                   {itemAmount}
                 </span>
               )}
@@ -158,7 +158,7 @@ const Nav = () => {
                   <a
                     href={link.href}
                     onClick={link.onClick}
-                    className="text-white font-medium hover:text-secondary transition-colors duration-200 text-base uppercase tracking-wide block py-2"
+                    className="text-ashWhite font-medium hover:text-secondary transition-colors duration-200 text-base uppercase tracking-wide block py-2"
                   >
                     {link.name}
                   </a>

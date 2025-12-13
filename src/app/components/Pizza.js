@@ -26,8 +26,8 @@ const Pizza = ({ pizza }) => {
   }
 
   return (
-    <div onClick={openModal} className="group p-4 bg-lightGray rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer border border-black/5 flex flex-col h-full">
-      <div className="relative w-full aspect-square mb-4 overflow-hidden rounded-xl bg-white flex items-center justify-center">
+    <div onClick={openModal} className="group p-4 bg-softBlack rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer border border-cardBorder flex flex-col h-full">
+      <div className="relative w-full aspect-square mb-4 overflow-hidden rounded-xl bg-white/5 flex items-center justify-center">
         <Image
           className="object-contain hover:scale-105 transition-transform duration-300"
           src={pizza.image}
@@ -40,18 +40,18 @@ const Pizza = ({ pizza }) => {
 
       {/* title */}
       <div className="flex-grow">
-        <h3 className="text-lg font-bold mb-2 capitalize text-charcoal leading-tight">
+        <h3 className="text-lg font-bold mb-2 capitalize text-ashWhite leading-tight">
           {pizza.name}
         </h3>
         {/* description */}
-        <p className="text-sm text-charcoal/70 line-clamp-2 mb-4">
+        <p className="text-sm text-ashWhite/70 line-clamp-2 mb-4">
           {pizza.description}
         </p>
       </div>
 
       {/* price & btn */}
-      <div className="flex items-center justify-between mt-auto pt-2 border-t border-black/5">
-        <div className="text-lg font-bold text-charcoal">
+      <div className="flex items-center justify-between mt-auto pt-2 border-t border-cardBorder">
+        <div className="text-lg font-bold text-secondary">
           Rs. {pizza.priceSm.toLocaleString()}
         </div>
         <button className="hidden lg:flex bg-primary text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-primaryHover transition-colors shadow-lg hover:shadow-primary/20">
@@ -71,13 +71,13 @@ const Pizza = ({ pizza }) => {
             closeModal();
           }}
           contentLabel="Pizza Modal"
-          className="bg-cream w-full h-full lg:max-w-[900px] lg:max-h-[600px] lg:rounded-[30px] lg:fixed lg:top-[50%] lg:left-[50%] lg:translate-x-[-50%] lg:translate-y-[-50%] outline-none shadow-2xl overflow-hidden"
+          className="bg-softBlack w-full h-full lg:max-w-[900px] lg:max-h-[600px] lg:rounded-[30px] lg:fixed lg:top-[50%] lg:left-[50%] lg:translate-x-[-50%] lg:translate-y-[-50%] outline-none shadow-2xl overflow-hidden border border-cardBorder"
         >
           <div onClick={(e) => {
             e.stopPropagation();
             closeModal();
-          }} className="absolute z-30 right-4 top-4 hover:scale-110 duration-200 cursor-pointer bg-white rounded-full p-1 shadow-md">
-            <X className="text-2xl text-charcoal" />
+          }} className="absolute z-30 right-4 top-4 hover:scale-110 duration-200 cursor-pointer bg-charcoalBlack rounded-full p-2 text-ashWhite/80 hover:text-ashWhite shadow-md">
+            <X className="text-2xl" />
           </div>
           <PizzaDetails pizza={pizza} modal={modal} setModal={setModal} />
         </Modal>}

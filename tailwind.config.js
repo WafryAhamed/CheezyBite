@@ -27,12 +27,16 @@ module.exports = {
         robotoCondensed: [`var(--font-robotoCondensed)`, 'sans-serif'],
       },
       colors: {
-        primary: '#E63946', // Primary Red
-        primaryHover: '#B11226', // Dark Red
-        secondary: '#FFC857', // Cheese Yellow
-        charcoal: '#1F2933', // Text, Navbar
-        cream: '#FFF8F0', // Background
-        lightGray: '#F3F4F6', // Cards, Sections
+        primary: '#E10600', // Fire Red
+        primaryHover: '#B00000', // Lava Red
+        secondary: '#FF6A00', // Flame Orange
+        accent: '#FF8C1A', // Ember Orange
+        jetBlack: '#0B0B0B', // Main background
+        charcoalBlack: '#151515', // Navbar
+        softBlack: '#1F1F1F', // Cards
+        ashWhite: '#F5F5F5', // Text
+        smokeGray: '#9CA3AF', // Muted text
+        cardBorder: '#2A2A2A', // Card Border
         white: '#FFFFFF',
       },
       backgroundImage: {

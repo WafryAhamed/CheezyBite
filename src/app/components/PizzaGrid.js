@@ -5,7 +5,7 @@ const PizzaGrid = ({ pizzas }) => {
     if (!pizzas || pizzas.length === 0) {
         return (
             <div className="text-center py-12">
-                <h3 className="text-xl font-semibold text-charcoal/60">No delicious pizzas found at the moment!</h3>
+                <h3 className="text-xl font-semibold text-ashWhite/60">No delicious pizzas found at the moment!</h3>
             </div>
         );
     }

@@ -6,20 +6,20 @@ import { CartContext } from "../context/CartContext";
 const CartItem = ({ pizza }) => {
   const { removeItem, increaseAmount, decreaseAmount } = useContext(CartContext);
   return (
-    <div className="select-none border-b border-black/5 last:border-0 pb-4">
+    <div className="select-none border-b border-cardBorder last:border-0 pb-4">
       <div className="flex gap-x-4 mb-2">
-        <div className="flex justify-between items-center bg-lightGray rounded-lg p-1">
+        <div className="flex justify-between items-center bg-softBlack rounded-lg p-1">
           <Image src={pizza.image} width={90} height={90} alt="" className="object-contain" />
         </div>
 
         <div className="flex-1 flex flex-col gap-y-10">
-          <div className="text-lg capitalize font-bold text-charcoal">{pizza.name}</div>
+          <div className="text-lg capitalize font-bold text-ashWhite">{pizza.name}</div>
           <div className="flex flex-col gap-y-1">
-            <div className="capitalize font-medium text-[15px] text-charcoal/70">{pizza.crust} crust</div>
-            <div className="capitalize mb-2 font-medium text-[15px] text-charcoal/70">{pizza.size} size</div>
+            <div className="capitalize font-medium text-[15px] text-ashWhite/70">{pizza.crust} crust</div>
+            <div className="capitalize mb-2 font-medium text-[15px] text-ashWhite/70">{pizza.size} size</div>
             <div className="flex items-center gap-x-1">
               <div onClick={() => decreaseAmount(pizza.id, pizza.price)} className="w-[18px] h-[18px] flex justify-center items-center cursor-pointer text-white gradient rounded-full"><Minus className="w-3 h-3" /></div>
-              <div className="font-semibold flex flex-1 max-w-[30px] justify-center items-center text-sm text-charcoal">{pizza.amount}</div>
+              <div className="font-semibold flex flex-1 max-w-[30px] justify-center items-center text-sm text-ashWhite">{pizza.amount}</div>
               <div onClick={() => increaseAmount(pizza.id, pizza.price)} className="w-[18px] h-[18px] flex justify-center items-center cursor-pointer text-white gradient rounded-full"><Plus className="w-3 h-3" /></div>
             </div>
           </div>
@@ -30,16 +30,16 @@ const CartItem = ({ pizza }) => {
             <X className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-[17px] font-medium font-robotoCondensed text-charcoal">Rs. {parseFloat(pizza.price * pizza.amount).toLocaleString()}</span>
+            <span className="text-[17px] font-medium font-robotoCondensed text-ashWhite">Rs. {parseFloat(pizza.price * pizza.amount).toLocaleString()}</span>
           </div>
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-3 mt-4">
-        <div className="font-semibold text-charcoal/80">
+        <div className="font-semibold text-ashWhite/80">
           Toppings: {pizza.additionalTopping.length === 0 && 'None'}
         </div>
         {pizza.additionalTopping.map((topping, index) => (
-          <div className="capitalize text-xs bg-lightGray text-charcoal font-medium px-3 py-1 rounded-full leading-none" key={index}>
+          <div className="capitalize text-xs bg-softBlack text-ashWhite font-medium px-3 py-1 rounded-full leading-none border border-cardBorder" key={index}>
             {topping.name}
           </div>
         ))}
