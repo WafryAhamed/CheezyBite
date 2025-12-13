@@ -66,7 +66,7 @@ export default function OrdersPage() {
                                 </div>
                                 <div className="flex items-center gap-4">
                                     <div className="text-right">
-                                        <p className="text-white font-semibold">${order.total?.toFixed(2)}</p>
+                                        <p className="text-white font-semibold">Rs. {order.total?.toFixed(2)}</p>
                                         <p className="text-gray-400 text-sm">{order.items?.length || 0} items</p>
                                     </div>
                                     <span className={`px-3 py-1 rounded-full text-sm ${stageColors[order.currentStage]} text-white`}>
@@ -94,7 +94,7 @@ export default function OrdersPage() {
                                                         <span className="text-gray-400 ml-2">x{item.amount}</span>
                                                         {item.size && <span className="text-gray-500 ml-2">({item.size})</span>}
                                                     </div>
-                                                    <span className="text-green-400">${(item.price * item.amount).toFixed(2)}</span>
+                                                    <span className="text-green-400">Rs. {(item.price * item.amount).toFixed(2)}</span>
                                                 </div>
                                             ))}
                                         </div>

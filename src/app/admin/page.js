@@ -2,7 +2,7 @@
 
 import { useAdmin } from '../context/AdminContext';
 import Link from 'next/link';
-import { ShoppingBag, TrendingUp, Package, DollarSign, Clock, CheckCircle, Pizza } from 'lucide-react';
+import { ShoppingBag, TrendingUp, Package, DollarSign, Clock, CheckCircle, Pizza, Star } from 'lucide-react';
 
 export default function AdminDashboard() {
     const { analytics, orders, pizzas, toppings, loading } = useAdmin();
@@ -53,7 +53,7 @@ export default function AdminDashboard() {
                         </div>
                         <div>
                             <p className="text-gray-400 text-sm">Total Revenue</p>
-                            <p className="text-2xl font-bold text-white">${analytics.totalRevenue.toFixed(2)}</p>
+                            <p className="text-2xl font-bold text-white">Rs. {analytics.totalRevenue.toLocaleString()}</p>
                         </div>
                     </div>
                 </div>
@@ -77,7 +77,7 @@ export default function AdminDashboard() {
                         </div>
                         <div>
                             <p className="text-gray-400 text-sm">Avg Order Value</p>
-                            <p className="text-2xl font-bold text-white">${analytics.avgOrderValue.toFixed(2)}</p>
+                            <p className="text-2xl font-bold text-white">Rs. {analytics.avgOrderValue.toFixed(0)}</p>
                         </div>
                     </div>
                 </div>
@@ -130,7 +130,7 @@ export default function AdminDashboard() {
                                 <div key={order.id} className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg">
                                     <div>
                                         <p className="text-white font-medium">#{order.id.toString().slice(-6)}</p>
-                                        <p className="text-gray-400 text-sm">${order.total?.toFixed(2)}</p>
+                                        <p className="text-gray-400 text-sm">Rs. {order.total?.toFixed(2)}</p>
                                     </div>
                                     <span className={`px-2 py-1 rounded-full text-xs ${stageColors[order.currentStage]} text-white`}>
                                         {stageNames[order.currentStage]}
@@ -141,6 +141,35 @@ export default function AdminDashboard() {
                     ) : (
                         <p className="text-gray-500">No orders yet</p>
                     )}
+                </div>
+            </div>
+
+            {/* Reviews Section */}
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                <h2 className="text-lg font-semibold text-white mb-4">Recent Feedback</h2>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {[
+                        { name: 'Ruwan Perera', comment: 'Best pizza in Colombo! The cheese layer is amazing.', rating: 5, time: '2 mins ago', initial: 'R', color: 'bg-blue-600' },
+                        { name: 'Fatima Rimzan', comment: 'Superb service and delicious taste. Kids loved the Cheesy Bliss!', rating: 5, time: '15 mins ago', initial: 'F', color: 'bg-pink-600' },
+                        { name: 'S. Mahendran', comment: 'Authentic flavors, really good value for money. Keep it up!', rating: 5, time: '1 hour ago', initial: 'S', color: 'bg-purple-600' },
+                        { name: 'Mohamed Nazeem', comment: 'Delivery was very fast. Hot and spicy just like we like it.', rating: 5, time: '2 hours ago', initial: 'M', color: 'bg-green-600' }
+                    ].map((review, i) => (
+                        <div key={i} className="bg-gray-700/30 p-4 rounded-lg border border-gray-700/50">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className={`w-8 h-8 rounded-full ${review.color} flex items-center justify-center text-white font-bold text-xs`}>
+                                    {review.initial}
+                                </div>
+                                <div>
+                                    <div className="text-white text-sm font-medium">{review.name}</div>
+                                    <div className="flex text-yellow-500">
+                                        {[...Array(review.rating)].map((_, i) => <Star key={i} className="w-3 h-3 fill-current" />)}
+                                    </div>
+                                </div>
+                            </div>
+                            <p className="text-gray-300 text-xs italic">"{review.comment}"</p>
+                            <p className="text-gray-500 text-[10px] mt-2 text-right">{review.time}</p>
+                        </div>
+                    ))}
                 </div>
             </div>
 
