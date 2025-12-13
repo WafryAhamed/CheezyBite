@@ -5,6 +5,8 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { Plus, Pencil, Trash2, ToggleLeft, ToggleRight, X } from 'lucide-react';
 
+import AdminCard from '../../components/admin/AdminCard';
+
 export default function PizzasPage() {
     const { pizzas, addPizza, updatePizza, togglePizzaEnabled, deletePizza, toppings } = useAdmin();
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -12,24 +14,20 @@ export default function PizzasPage() {
     const [formData, setFormData] = useState({
         name: '',
         description: '',
-        image: '/capricciosa.webp',
+        image: '/pizzas/pizza1.jpg',
         priceSm: 9.99,
         priceMd: 10.99,
         priceLg: 11.99,
     });
 
-    const availableImages = [
-        '/capricciosa.webp', '/cheesy.webp', '/hawaii.webp', '/italian.webp',
-        '/margherita.webp', '/pepperoni.webp', '/quattro-formaggi.webp',
-        '/quattro-stagioni.webp', '/tonno.webp', '/vegetarian.webp'
-    ];
+    const availableImages = Array.from({ length: 25 }, (_, i) => `/pizzas/pizza${i + 1}.jpg`);
 
     const openAddModal = () => {
         setEditingPizza(null);
         setFormData({
             name: '',
             description: '',
-            image: '/capricciosa.webp',
+            image: '/pizzas/pizza1.jpg',
             priceSm: 9.99,
             priceMd: 10.99,
             priceLg: 11.99,
@@ -79,56 +77,69 @@ export default function PizzasPage() {
             {/* Pizza Grid */}
             <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {pizzas.map((pizza) => (
-                    <div
+                    <AdminCard
                         key={pizza.id}
-                        className={`bg-gray-800 rounded-xl border ${pizza.enabled ? 'border-gray-700' : 'border-red-500/30'} overflow-hidden`}
+                        variant="orange"
+                        className={`relative group overflow-hidden ${!pizza.enabled ? 'opacity-75' : ''}`}
                     >
-                        <div className="relative h-40 bg-gray-700">
+                        <div className="relative h-48 -mx-6 -mt-6 mb-4 bg-gray-700">
                             <Image
-                                src={pizza.image}
+                                src={pizza.image || '/pizzas/pizza1.jpg'}
                                 alt={pizza.name}
                                 fill
-                                className={`object-cover ${!pizza.enabled ? 'opacity-50' : ''}`}
+                                className={`object-cover ${!pizza.enabled ? 'grayscale' : ''}`}
                             />
                             {!pizza.enabled && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                                    <span className="text-red-400 font-semibold">DISABLED</span>
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                                    <span className="text-red-400 font-bold border-2 border-red-400 px-4 py-1 rounded-lg transform -rotate-12">DISABLED</span>
                                 </div>
                             )}
-                        </div>
-                        <div className="p-4">
-                            <h3 className="text-white font-semibold capitalize">{pizza.name}</h3>
-                            <p className="text-gray-400 text-sm line-clamp-2 mt-1">{pizza.description}</p>
-                            <div className="flex gap-2 mt-2 text-sm">
-                                <span className="text-gray-400">S: ${pizza.priceSm}</span>
-                                <span className="text-gray-400">M: ${pizza.priceMd}</span>
-                                <span className="text-gray-400">L: ${pizza.priceLg}</span>
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 pt-12">
+                                <h3 className="text-xl font-bold text-white capitalize shadow-black/50 drop-shadow-md">{pizza.name}</h3>
                             </div>
-                            <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-700">
+                        </div>
+
+                        <p className="text-gray-300 text-sm line-clamp-2 mb-4 h-10">{pizza.description}</p>
+
+                        <div className="flex gap-2 mb-4 bg-black/20 p-2 rounded-lg justify-between">
+                            <div className="flex flex-col items-center">
+                                <span className="text-xs text-gray-400">Small</span>
+                                <span className="text-white font-bold">${pizza.priceSm}</span>
+                            </div>
+                            <div className="flex flex-col items-center border-l border-white/10 pl-2">
+                                <span className="text-xs text-gray-400">Medium</span>
+                                <span className="text-white font-bold">${pizza.priceMd}</span>
+                            </div>
+                            <div className="flex flex-col items-center border-l border-white/10 pl-2">
+                                <span className="text-xs text-gray-400">Large</span>
+                                <span className="text-white font-bold">${pizza.priceLg}</span>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                            <button
+                                onClick={() => togglePizzaEnabled(pizza.id)}
+                                className={`flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors ${pizza.enabled ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'}`}
+                            >
+                                {pizza.enabled ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
+                                {pizza.enabled ? 'Enabled' : 'Disabled'}
+                            </button>
+                            <div className="flex gap-2">
                                 <button
-                                    onClick={() => togglePizzaEnabled(pizza.id)}
-                                    className={`flex items-center gap-2 text-sm ${pizza.enabled ? 'text-green-400' : 'text-red-400'}`}
+                                    onClick={() => openEditModal(pizza)}
+                                    className="p-2 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded-lg transition-colors"
                                 >
-                                    {pizza.enabled ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
-                                    {pizza.enabled ? 'Enabled' : 'Disabled'}
+                                    <Pencil className="w-4 h-4" />
                                 </button>
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => openEditModal(pizza)}
-                                        className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
-                                    >
-                                        <Pencil className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                        onClick={() => deletePizza(pizza.id)}
-                                        className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </div>
+                                <button
+                                    onClick={() => deletePizza(pizza.id)}
+                                    className="p-2 bg-red-500/10 text-gray-400 hover:text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
                             </div>
                         </div>
-                    </div>
+                    </AdminCard>
                 ))}
             </div>
 
@@ -176,7 +187,7 @@ export default function PizzasPage() {
                                     className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
                                 >
                                     {availableImages.map(img => (
-                                        <option key={img} value={img}>{img.replace('/', '').replace('.webp', '')}</option>
+                                        <option key={img} value={img}>{img.split('/').pop()}</option>
                                     ))}
                                 </select>
                             </div>
