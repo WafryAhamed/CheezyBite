@@ -4,6 +4,7 @@ import React, { createContext, useState, useEffect, useCallback } from 'react';
 import {
     loadActiveOrder,
     saveActiveOrder,
+    updateOrderStatus,
     updateOrderStage,
     clearActiveOrder,
     saveToOrderHistory,
@@ -73,8 +74,8 @@ export const OrderProvider = ({ children }) => {
     }, [activeOrder]);
 
     // Create new order
-    const createOrder = useCallback((cart, cartTotal, onSuccess) => {
-        const order = createOrderUtil(cart, cartTotal);
+    const createOrder = useCallback((cart, cartTotal, orderDetails, onSuccess) => {
+        const order = createOrderUtil(cart, cartTotal, orderDetails); // Pass full details including instructions
         saveActiveOrder(order);
         setActiveOrder(order);
         setIsOrderModalOpen(true);
@@ -90,17 +91,28 @@ export const OrderProvider = ({ children }) => {
         return order;
     }, []);
 
-    // Cancel order (for testing)
+    // Cancel order (Strict Logic)
     const cancelOrder = useCallback(() => {
-        if (activeOrder) {
-            saveToOrderHistory(activeOrder);
-            clearActiveOrder();
-            setActiveOrder(null);
-            setIsOrderModalOpen(false);
-            toast.error('Order cancelled', {
-                duration: 2000,
+        if (!activeOrder) return;
+
+        // ONLY ALLOW CANCEL IF STAGE IS 0 (Order Placed)
+        if (activeOrder.currentStage > 0) {
+            toast.error("Cannot cancel: Preparation has started!", {
+                icon: '👩‍🍳',
+                duration: 4000
             });
+            return;
         }
+
+        const cancelledOrder = { ...activeOrder, status: 'Cancelled', stage: -1 };
+        saveToOrderHistory(cancelledOrder);
+        clearActiveOrder();
+        setActiveOrder(null);
+        setIsOrderModalOpen(false);
+
+        toast.error('Order cancelled successfully', {
+            duration: 3000,
+        });
     }, [activeOrder]);
 
     const value = {

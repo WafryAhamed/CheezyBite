@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 const OrderPage = ({ params }) => {
     const { orderId } = params;
-    const { activeOrder, stageMessages } = useContext(OrderContext);
+    const { activeOrder, stageMessages, cancelOrder } = useContext(OrderContext);
     const [orders, setOrders] = useState([]);
 
     // We check activeOrder first, then localStorage history for "past" orders
@@ -36,6 +36,28 @@ const OrderPage = ({ params }) => {
     const { currentStage, items, total, address } = currentOrder;
     const currentStageIndex = currentOrder.currentStage || 0;
 
+    const [rating, setRating] = useState(0);
+    const [comment, setComment] = useState('');
+    const [isFeedbackSubmitted, setIsFeedbackSubmitted] = useState(false);
+
+    const handleFeedbackSubmit = () => {
+        if (rating === 0) return;
+
+        // Update Order with Feedback
+        const updatedOrder = { ...currentOrder, feedback: { rating, comment } };
+
+        // Update History
+        const history = JSON.parse(localStorage.getItem('cheezybite_orders') || '[]');
+        const updatedHistory = history.map(o => o.id === orderId ? updatedOrder : o);
+
+        if (!history.find(o => o.id === orderId)) {
+            updatedHistory.push(updatedOrder);
+        }
+
+        localStorage.setItem('cheezybite_orders', JSON.stringify(updatedHistory));
+        setIsFeedbackSubmitted(true);
+    };
+
     return (
         <div className='container mx-auto px-4 pt-24 pb-12 min-h-screen'>
             {/* Header */}
@@ -58,7 +80,19 @@ const OrderPage = ({ params }) => {
             <div className="text-ashWhite/60 mb-8 flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-primary" />
                 <span>{address?.street}, {address?.city} {address?.phone && `(${address.phone})`}</span>
+                <span>{address?.street}, {address?.city} {address?.phone && `(${address.phone})`}</span>
             </div>
+
+            {/* Delivery Instructions Display */}
+            {currentOrder.deliveryInstructions && (
+                <div className="bg-softBlack/50 border border-white/10 p-4 rounded-xl mb-8 flex items-start gap-3">
+                    <span className="text-xl">📝</span>
+                    <div>
+                        <h4 className="text-xs font-bold text-ashWhite/60 uppercase tracking-wider mb-1">Delivery Instructions</h4>
+                        <p className="text-ashWhite italic">"{currentOrder.deliveryInstructions}"</p>
+                    </div>
+                </div>
+            )}
 
             {/* Progress Timeline */}
             <div className="bg-charcoalBlack border border-cardBorder p-8 rounded-2xl mb-8 relative overflow-hidden">
@@ -96,33 +130,7 @@ const OrderPage = ({ params }) => {
                 </div>
             </div>
 
-    // ... inside OrderPage
-            const [rating, setRating] = useState(0);
-            const [comment, setComment] = useState('');
-            const [isFeedbackSubmitted, setIsFeedbackSubmitted] = useState(false);
 
-    const handleFeedbackSubmit = () => {
-        if (rating === 0) return;
-
-            // Update Order with Feedback
-            const updatedOrder = {...currentOrder, feedback: {rating, comment} };
-
-            // Update Active Context if matches
-            // (Note: In a real app we'd call an API. Here we update localStorage manually for persistence)
-
-            // Update History
-            const history = JSON.parse(localStorage.getItem('cheezybite_orders') || '[]');
-        const updatedHistory = history.map(o => o.id === orderId ? updatedOrder : o);
-        
-        if (!history.find(o => o.id === orderId)) {
-                updatedHistory.push(updatedOrder);
-        }
-
-            localStorage.setItem('cheezybite_orders', JSON.stringify(updatedHistory));
-            setIsFeedbackSubmitted(true);
-    };
-
-            // ... inside return JSX, after Timeline
 
             {/* Feedback Section - Only if Delivered */}
             {currentStageIndex >= 4 && (
@@ -183,7 +191,27 @@ const OrderPage = ({ params }) => {
                             <button className="flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-full text-ashWhite font-bold transition-all">
                                 <Phone className="w-4 h-4" /> Call Support
                             </button>
+
+                            {/* Cancel Button - Only show if not delivered or cancelled */}
+                            {currentStageIndex < 4 && currentOrder.status !== 'Cancelled' && (
+                                <button
+                                    onClick={cancelOrder}
+                                    disabled={currentStageIndex > 0} // Only allow in first stage (Order Placed = 0)
+                                    className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all border ${currentStageIndex > 0
+                                        ? 'bg-transparent border-white/10 text-white/20 cursor-not-allowed'
+                                        : 'bg-red-500/10 border-red-500/50 text-red-500 hover:bg-red-500/20'
+                                        }`}
+                                >
+                                    <AlertCircle className="w-4 h-4" />
+                                    {currentStageIndex > 0 ? 'Cannot Cancel' : 'Cancel Order'}
+                                </button>
+                            )}
                         </div>
+                        {currentStageIndex > 0 && currentStageIndex < 4 && currentOrder.status !== 'Cancelled' && (
+                            <div className="w-full text-center sm:text-right sm:w-auto mt-2 sm:mt-0 text-xs text-ashWhite/40">
+                                Order can no longer be cancelled as preparation has started.
+                            </div>
+                        )}
                     </div>
                 </div>
 

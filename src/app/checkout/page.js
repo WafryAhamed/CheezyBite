@@ -26,6 +26,7 @@ const CheckoutPage = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState('cash'); // Default to Cash as it's easier for demos
     const [deliveryTime, setDeliveryTime] = useState('asap');
+    const [deliveryInstructions, setDeliveryInstructions] = useState('');
 
     // Card State
     const [cardData, setCardData] = useState({ number: '', name: '', expiry: '', cvv: '', focus: '' });
@@ -170,6 +171,8 @@ const CheckoutPage = () => {
                 paymentMethod,
                 deliveryTime,
                 deliveryTime,
+                deliveryTime,
+                deliveryInstructions,
                 paymentDetails: paymentMethod === 'card'
                     ? { type: 'card', masked: '**' + cardData.number.slice(-4), token: 'tok_cheezybite_' + Math.random().toString(36).substr(2, 9) }
                     : { type: 'cod' }
@@ -341,6 +344,18 @@ const CheckoutPage = () => {
                                 )
                             )}
                         </div>
+                    </div>
+
+                    {/* Delivery Instructions */}
+                    <div className="bg-charcoalBlack rounded-2xl p-6 border border-cardBorder mt-6">
+                        <label className="block text-sm font-bold text-ashWhite mb-2">Delivery Instructions (Optional)</label>
+                        <textarea
+                            className="w-full bg-softBlack border border-cardBorder rounded-xl p-4 text-ashWhite placeholder:text-ashWhite/30 outline-none focus:border-primary transition-colors resize-none"
+                            rows="3"
+                            placeholder="E.g. Call on arrival, Leave at gate, Ring bell..."
+                            value={deliveryInstructions}
+                            onChange={(e) => setDeliveryInstructions(e.target.value)}
+                        ></textarea>
                     </div>
 
                     {/* Delivery Time and Payment (Reused from existing, just simplified logic) */}

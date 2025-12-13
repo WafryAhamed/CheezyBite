@@ -47,7 +47,7 @@ export function calculateDeliveryETA(minMinutes = 30, maxMinutes = 45) {
 /**
  * Create new order object
  */
-export function createOrder(cart, cartTotal) {
+export function createOrder(cart, cartTotal, orderDetails = {}) {
     const eta = calculateDeliveryETA();
 
     const order = {
@@ -59,6 +59,7 @@ export function createOrder(cart, cartTotal) {
         status: 'placed',
         currentStage: 0,
         eta: eta,
+        ...orderDetails, // Spread optional details like deliveryInstructions, paymentDetails, address props
         statusHistory: [
             {
                 status: 'placed',
