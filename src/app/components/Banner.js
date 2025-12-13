@@ -37,13 +37,13 @@ const Banner = () => {
 
               {/* Primary Headline */}
               <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bangers text-white drop-shadow-lg leading-tight mb-4">
-                Craft Your Perfect Pizza.
-                <span className="block text-secondary">Delivered Hot & Fresh.</span>
+                Hot. Fast.
+                <span className="block text-secondary">Delivered.</span>
               </h1>
 
               {/* Supporting Line */}
               <p className="text-white/80 text-lg lg:text-xl font-robotoCondensed mb-8 max-w-lg">
-                Fresh ingredients · Handcrafted with love · Island-wide delivery to your doorstep
+                30 min delivery · Fresh ingredients · Secure payments · Island-wide delivery
               </p>
 
               {/* CTA Buttons */}

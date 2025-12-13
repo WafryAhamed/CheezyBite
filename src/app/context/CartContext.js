@@ -46,11 +46,11 @@ const CartProvider = ({ children }) => {
         setCartTotal(price);
     }, [cart]);
 
-    const addToCart = (id, image, name, price, additionalTopping, size, crust) => {
+    const addToCart = (id, image, name, price, additionalTopping, size, crust, amount = 1) => {
         additionalTopping.sort((a, b) => a.name.localeCompare(b.name));
 
         const newItem = {
-            id, image, name, price, additionalTopping, size, crust, amount: 1
+            id, image, name, price, additionalTopping, size, crust, amount: amount
         };
 
         const cartItemIndex = cart.findIndex(
@@ -72,7 +72,7 @@ const CartProvider = ({ children }) => {
             });
         } else {
             const newCart = [...cart];
-            newCart[cartItemIndex].amount += 1;
+            newCart[cartItemIndex].amount += amount;
             setCart(newCart);
             // Show toast for quantity update
             toast.success(`Updated ${name} quantity`, {
@@ -80,8 +80,6 @@ const CartProvider = ({ children }) => {
                 position: 'bottom-right',
             });
         }
-
-        // BUG FIX: Removed duplicate setCart([...cart, newItem]) that was here
 
         setIsOpen(true);
     };
