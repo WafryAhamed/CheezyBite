@@ -2,19 +2,19 @@
 
 import React, { useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { CartContext } from '../context/CartContext';
-import { UserContext } from '../context/UserContext';
-import { OrderContext } from '../context/OrderContext';
+import { CartContext } from '../../context/CartContext';
+import { UserContext } from '../../context/UserContext';
+import { OrderContext } from '../../context/OrderContext';
 import Link from 'next/link';
 import Image from 'next/image';
 import { CheckCircle, CreditCard, MapPin, Truck, Plus, Home, Briefcase, Trash2, Loader2, AlertCircle } from 'lucide-react';
 
 import toast from 'react-hot-toast';
-import CreditCardForm from '../components/CreditCardForm';
+import CreditCardForm from '../../components/CreditCardForm';
 // Validating card fields
-import { validateCardField, isValidLuhn, isValidExpiry, isValidCVV, isValidName } from '../../utils/cardValidation';
-import { isStoreOpen, checkDeliveryAvailability } from '../../utils/storeLogic';
-import OTPModal from '../components/OTPModal';
+import { validateCardField, isValidLuhn, isValidExpiry, isValidCVV, isValidName } from '../../../utils/cardValidation';
+import { isStoreOpen, checkDeliveryAvailability } from '../../../utils/storeLogic';
+import OTPModal from '../../components/OTPModal';
 
 const CheckoutPage = () => {
     const router = useRouter();
