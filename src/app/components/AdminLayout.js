@@ -47,7 +47,26 @@ const AdminLayout = ({ children }) => {
         }
     }, [loading, isAuthenticated, userRole, router, pathname]);
 
-    if (loading || !isAuthenticated) {
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-jetBlack">
+                <AdminHeader />
+                <div className="flex pt-16 h-screen">
+                    <aside className="hidden lg:flex lg:flex-col w-64 bg-charcoalBlack border-r border-cardBorder fixed left-0 top-16 bottom-0 p-4 space-y-4">
+                        <div className="h-4 w-24 bg-gray-800/50 rounded animate-pulse mb-4"></div>
+                        {[...Array(6)].map((_, i) => (
+                            <div key={i} className="h-10 bg-gray-800/50 rounded-lg animate-pulse" />
+                        ))}
+                    </aside>
+                    <main className="flex-1 lg:ml-64 p-6 lg:p-8 overflow-y-auto bg-jetBlack">
+                        {children}
+                    </main>
+                </div>
+            </div>
+        );
+    }
+
+    if (!isAuthenticated) {
         return (
             <div className="min-h-screen bg-jetBlack flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>

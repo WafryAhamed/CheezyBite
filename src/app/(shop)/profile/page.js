@@ -4,8 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { User, MapPin, Package, Heart, LogOut, Edit2, Save, Phone, Home, RotateCw, CheckCircle, Clock } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useUser } from '../context/UserContext';
-import { useCart } from '../context/CartContext';
+import { useUser } from '../../context/UserContext';
+import { useCart } from '../../context/CartContext';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
