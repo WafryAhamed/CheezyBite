@@ -53,6 +53,73 @@ const CheckoutPage = () => {
         setNewAddress({ ...newAddress, street: '', city: '', area: '' });
     };
 
+    // Placeholder for payment processing
+    const processPayment = async () => {
+        return new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
+    };
+
+    const handlePlaceOrder = async () => {
+        if (!selectedAddressId) {
+            toast.error("Please select a delivery address");
+            return;
+        }
+
+        const deliveryAddress = user.addresses.find(a => a.id === selectedAddressId);
+
+        // Basic validation for phone number if not already present in user or address
+        if (!deliveryAddress.phone && !user.phone) {
+            toast.error("Phone number is required for delivery.");
+            return;
+        }
+
+        if (paymentMethod === 'cash') {
+            if (!deliveryAddress.phone && !user.phone) {
+                toast.error("Phone number required for Cash on Delivery");
+                return;
+            }
+        } else if (paymentMethod === 'card') {
+            const errors = {};
+            if (!cardData.number || cardData.number.length < 16) errors.number = "Invalid card number";
+            if (!cardData.name) errors.name = "Name on card is required";
+            if (!cardData.expiry || !/^\d{2}\/\d{2}$/.test(cardData.expiry)) errors.expiry = "Invalid expiry (MM/YY)";
+            if (!cardData.cvc || cardData.cvc.length < 3) errors.cvc = "Invalid CVC";
+
+            if (Object.keys(errors).length > 0) {
+                setCardErrors(errors);
+                toast.error("Please correct card details");
+                return;
+            }
+        }
+
+        setIsProcessing(true);
+
+        try {
+            if (paymentMethod === 'card') {
+                await processPayment();
+            }
+
+            // Create Order and Get ID
+            const newOrder = createOrder(cart, cartTotal, {
+                address: deliveryAddress,
+                paymentMethod,
+                deliveryTime,
+                paymentDetails: paymentMethod === 'card' ? { type: 'card', masked: '**' + cardData.number.slice(-4) } : { type: 'cod' }
+            });
+
+            clearCart();
+
+            // Redirect to Tracking Page
+            if (newOrder && newOrder.id) {
+                router.push(`/order/${newOrder.id}`);
+            } else {
+                toast.error("Error creating order reference");
+            }
+
+        } catch (error) {
+            toast.error("Payment Failed: " + error.message || "An unexpected error occurred.");
+            setIsProcessing(false); // Only stop processing on error, otherwise keep spinning until redirect
+        }
+    };
 
     if (cart.length === 0 && !success) {
         return (
