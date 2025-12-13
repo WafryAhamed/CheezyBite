@@ -21,7 +21,7 @@ const CheckoutPage = () => {
     const [deliveryTime, setDeliveryTime] = useState('asap');
 
     // Card State
-    const [cardData, setCardData] = useState({ number: '', name: '', expiry: '', cvc: '', focus: '' });
+    const [cardData, setCardData] = useState({ number: '', name: '', expiry: '', cvv: '', focus: '' });
     const [cardErrors, setCardErrors] = useState({});
 
     // Address State
@@ -88,7 +88,7 @@ const CheckoutPage = () => {
             if (!cardData.number || cardData.number.length < 16) errors.number = "Invalid card number";
             if (!cardData.name) errors.name = "Name on card is required";
             if (!cardData.expiry || !/^\d{2}\/\d{2}$/.test(cardData.expiry)) errors.expiry = "Invalid expiry (MM/YY)";
-            if (!cardData.cvc || cardData.cvc.length < 3) errors.cvc = "Invalid CVC";
+            if (!cardData.cvv || cardData.cvv.length < 3) errors.cvv = "Invalid CVC";
 
             if (Object.keys(errors).length > 0) {
                 setCardErrors(errors);
