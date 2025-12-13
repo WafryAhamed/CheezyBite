@@ -4,7 +4,7 @@ import { Phone, Mail, MapPin } from 'lucide-react';
 
 const Footer = () => {
   return (
-    <footer className="bg-primary bg-pattern py-16">
+    <footer className="bg-deepBlack bg-pattern py-16">
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-3 gap-8 items-start">
           {/* Brand Section */}
@@ -22,15 +22,15 @@ const Footer = () => {
             <h3 className="text-white font-semibold text-lg">Contact Us</h3>
             <div className="space-y-3 text-white/80 text-sm">
               <div className="flex items-center gap-3">
-                <Phone className="w-4 h-4 text-secondary" />
+                <Phone className="w-4 h-4 text-primary" />
                 <span>+94 11 234 5678</span>
               </div>
               <div className="flex items-center gap-3">
-                <Mail className="w-4 h-4 text-secondary" />
+                <Mail className="w-4 h-4 text-primary" />
                 <span>info@cheezybite.lk</span>
               </div>
               <div className="flex items-center gap-3">
-                <MapPin className="w-4 h-4 text-secondary" />
+                <MapPin className="w-4 h-4 text-primary" />
                 <span>Colombo, Sri Lanka</span>
               </div>
             </div>
@@ -42,7 +42,7 @@ const Footer = () => {
             <div className="space-y-2 text-white/80 text-sm">
               <p>Monday - Friday: 10:00 AM - 11:00 PM</p>
               <p>Saturday - Sunday: 11:00 AM - 12:00 AM</p>
-              <p className="text-secondary font-medium">🚚 Delivery available island-wide</p>
+              <p className="text-primary font-medium">🚚 Delivery available island-wide</p>
             </div>
           </div>
         </div>

@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useContext, useState, useEffect, useRef } from "react";
 import { CartContext } from "../context/CartContext";
-import { Menu, X, ShoppingBag, User } from "lucide-react";
+import { Menu, X, ShoppingBag, User, Phone } from "lucide-react";
 
 const Nav = () => {
   const { isOpen, setIsOpen, itemAmount } = useContext(CartContext);
@@ -52,8 +52,8 @@ const Nav = () => {
     <>
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
-          ? "bg-primary/95 backdrop-blur-sm shadow-lg py-2"
-          : "bg-primary py-3"
+          ? "bg-deepBlack/95 backdrop-blur-sm shadow-lg py-2"
+          : "bg-deepBlack py-3"
           }`}
       >
         <div className="container mx-auto flex items-center justify-between px-4">
@@ -71,7 +71,7 @@ const Nav = () => {
                   <a
                     href={link.href}
                     onClick={link.onClick}
-                    className="text-white font-medium hover:text-secondary transition-colors duration-200 text-sm uppercase tracking-wide"
+                    className="text-white font-medium hover:text-primary transition-colors duration-200 text-sm uppercase tracking-wide"
                   >
                     {link.name}
                   </a>
@@ -81,7 +81,7 @@ const Nav = () => {
 
             {/* Phone Info */}
             <div className="flex gap-x-3 items-center border-l border-white/20 pl-6">
-              <Image src="/phone.svg" width={32} height={32} alt="Call us" />
+              <Phone className="w-8 h-8 text-primary" />
               <div className="text-white">
                 <div className="font-robotoCondensed uppercase font-medium leading-none text-xs">
                   24/7 delivery
@@ -101,7 +101,7 @@ const Nav = () => {
             >
               <ShoppingBag className="w-6 h-6 text-white" />
               {itemAmount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-secondary text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-primary text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
                   {itemAmount}
                 </span>
               )}
@@ -158,7 +158,7 @@ const Nav = () => {
                   <a
                     href={link.href}
                     onClick={link.onClick}
-                    className="text-white font-medium hover:text-secondary transition-colors duration-200 text-base uppercase tracking-wide block py-2"
+                    className="text-white font-medium hover:text-primary transition-colors duration-200 text-base uppercase tracking-wide block py-2"
                   >
                     {link.name}
                   </a>
@@ -174,7 +174,7 @@ const Nav = () => {
 
             {/* Phone Info Mobile */}
             <div className="flex gap-x-3 items-center mt-4 pt-4 border-t border-white/10">
-              <Image src="/phone.svg" width={28} height={28} alt="Call us" />
+              <Phone className="w-7 h-7 text-secondary" />
               <div className="text-white">
                 <div className="font-robotoCondensed uppercase font-medium leading-none text-xs">
                   24/7 delivery

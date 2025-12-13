@@ -5,6 +5,8 @@ import { getPizzas } from './utils/pizzaStore';
 export default function Home() {
   const pizzas = getPizzas();
 
+  // Force re-render to fix hydration mismatch
+
   return (
     <section>
       <Banner />

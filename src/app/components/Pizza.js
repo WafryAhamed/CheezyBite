@@ -26,8 +26,8 @@ const Pizza = ({ pizza }) => {
   }
 
   return (
-    <div onClick={openModal} className="group p-4 bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer border border-gray-100 flex flex-col h-full">
-      <div className="relative w-full aspect-square mb-4 overflow-hidden rounded-xl bg-gray-50 flex items-center justify-center">
+    <div onClick={openModal} className="group p-4 bg-cardGrey rounded-2xl shadow-sm hover:shadow-xl hover:shadow-black/50 transition-all duration-300 transform hover:-translate-y-1 cursor-pointer border border-white/5 flex flex-col h-full">
+      <div className="relative w-full aspect-square mb-4 overflow-hidden rounded-xl bg-white/5 flex items-center justify-center">
         <Image
           className="object-contain hover:scale-105 transition-transform duration-300"
           src={pizza.image}
@@ -40,24 +40,24 @@ const Pizza = ({ pizza }) => {
 
       {/* title */}
       <div className="flex-grow">
-        <h3 className="text-lg font-bold mb-2 capitalize text-gray-800 leading-tight">
+        <h3 className="text-lg font-bold mb-2 capitalize text-white leading-tight">
           {pizza.name}
         </h3>
         {/* description */}
-        <p className="text-sm text-gray-500 line-clamp-2 mb-4">
+        <p className="text-sm text-white/60 line-clamp-2 mb-4">
           {pizza.description}
         </p>
       </div>
 
       {/* price & btn */}
-      <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
-        <div className="text-lg font-bold text-gray-900">
+      <div className="flex items-center justify-between mt-auto pt-2 border-t border-white/10">
+        <div className="text-lg font-bold text-white">
           Rs. {pizza.priceSm.toLocaleString()}
         </div>
-        <button className="hidden lg:flex bg-black text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-gray-800 transition-colors">
+        <button className="hidden lg:flex bg-primary text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-primaryHover transition-colors shadow-lg hover:shadow-primary/20">
           Add
         </button>
-        <button className="lg:hidden w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full text-lg">
+        <button className="lg:hidden w-8 h-8 flex items-center justify-center bg-primary text-white rounded-full text-lg shadow-lg">
           +
         </button>
       </div>
@@ -71,13 +71,13 @@ const Pizza = ({ pizza }) => {
             closeModal();
           }}
           contentLabel="Pizza Modal"
-          className="bg-white w-full h-full lg:max-w-[900px] lg:max-h-[600px] lg:rounded-[30px] lg:fixed lg:top-[50%] lg:left-[50%] lg:translate-x-[-50%] lg:translate-y-[-50%] outline-none shadow-2xl overflow-hidden"
+          className="bg-cardGrey w-full h-full lg:max-w-[900px] lg:max-h-[600px] lg:rounded-[30px] lg:fixed lg:top-[50%] lg:left-[50%] lg:translate-x-[-50%] lg:translate-y-[-50%] outline-none shadow-2xl overflow-hidden border border-white/10"
         >
           <div onClick={(e) => {
             e.stopPropagation();
             closeModal();
-          }} className="absolute z-30 right-4 top-4 hover:scale-110 duration-200 cursor-pointer bg-white rounded-full p-1 shadow-md">
-            <X className="text-2xl text-black" />
+          }} className="absolute z-30 right-4 top-4 hover:scale-110 duration-200 cursor-pointer bg-black/50 hover:bg-black/70 rounded-full p-2 text-white/80 hover:text-white backdrop-blur-sm transition-all">
+            <X className="text-2xl" />
           </div>
           <PizzaDetails pizza={pizza} modal={modal} setModal={setModal} />
         </Modal>}

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { MouseParallaxChild, MouseParallaxContainer } from "react-parallax-mouse";
+import { Flame, Leaf, Utensils } from 'lucide-react';
 
 const Banner = () => {
   // Smooth scroll to menu section
@@ -50,7 +51,7 @@ const Banner = () => {
                 {/* Primary CTA */}
                 <button
                   onClick={scrollToMenu}
-                  className="group relative px-8 py-4 bg-secondary hover:bg-secondary/90 text-black font-bold text-lg rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-secondary/50 flex items-center justify-center gap-2"
+                  className="group relative px-8 py-4 bg-primary hover:bg-primaryHover text-white font-bold text-lg rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-primary/50 flex items-center justify-center gap-2"
                 >
                   <span>Order Now</span>
                   <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -97,7 +98,7 @@ const Banner = () => {
               {/* Main Pizza Image */}
               <div className="relative w-[320px] h-[320px] sm:w-[400px] sm:h-[400px] lg:w-[550px] lg:h-[550px]">
                 <Image
-                  src="/pizza-banner.png"
+                  src="/pizza/pizza-3000282_1920.png"
                   fill
                   sizes="(max-width: 640px) 320px, (max-width: 1024px) 400px, 550px"
                   alt="Delicious freshly baked pizza with premium toppings"
@@ -108,22 +109,22 @@ const Banner = () => {
 
               {/* Floating Ingredient - Chilli 1 */}
               <MouseParallaxChild factorX={0.3} factorY={0.4} className="absolute -top-4 -left-8 hidden lg:block">
-                <Image src="/chilli-1.png" width={120} height={63} alt="" className="drop-shadow-lg" />
+                <Flame className="w-12 h-12 text-red-500 drop-shadow-lg" />
               </MouseParallaxChild>
 
               {/* Floating Ingredient - Chilli 2 */}
               <MouseParallaxChild factorX={0.5} factorY={0.5} className="absolute top-8 -left-16 hidden lg:block">
-                <Image src="/chilli-2.png" width={100} height={52} alt="" className="drop-shadow-lg" />
+                <Flame className="w-10 h-10 text-red-600 drop-shadow-lg rotate-12" />
               </MouseParallaxChild>
 
               {/* Floating Ingredient - Garlic */}
               <MouseParallaxChild factorX={0.4} factorY={0.6} className="absolute bottom-32 -left-20 hidden lg:block">
-                <Image src="/garlic-1.png" width={70} height={60} alt="" className="drop-shadow-lg" />
+                <Utensils className="w-10 h-10 text-white/80 drop-shadow-lg p-2 bg-white/20 rounded-full backdrop-blur-sm" />
               </MouseParallaxChild>
 
               {/* Floating Ingredient - Leaves */}
               <MouseParallaxChild factorX={0.25} factorY={0.3} className="absolute bottom-16 left-0 hidden lg:block">
-                <Image src="/leaves.png" width={140} height={56} alt="" className="drop-shadow-lg" />
+                <Leaf className="w-14 h-14 text-green-500 drop-shadow-lg rotate-45" />
               </MouseParallaxChild>
 
               {/* Floating Badge */}

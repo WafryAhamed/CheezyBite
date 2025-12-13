@@ -58,7 +58,7 @@ const CartBottom = () => {
           contentLabel="Checkout Modal"
         >
           <div onClick={closeModal} className="absolute z-30 right-2 top-2 hover:scale-110 duration-200 cursor-pointer">
-            <X className="text-4xl text-orange" />
+            <X className="text-4xl text-primary" />
           </div>
           <CheckoutDetails setModal={setModal} />
         </Modal>}
