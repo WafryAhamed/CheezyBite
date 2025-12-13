@@ -52,8 +52,8 @@ export default function AnalyticsPage() {
                         </div>
                         <span className="text-gray-400">Total Revenue</span>
                     </div>
-                    <p className="text-3xl font-bold text-white">${analytics.totalRevenue.toFixed(2)}</p>
-                    <p className="text-sm text-gray-400 mt-1">Avg: ${analytics.avgOrderValue.toFixed(2)}/order</p>
+                    <p className="text-3xl font-bold text-white">Rs. {analytics.totalRevenue.toFixed(2)}</p>
+                    <p className="text-sm text-gray-400 mt-1">Avg: Rs. {analytics.avgOrderValue.toFixed(2)}/order</p>
                 </div>
 
                 <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/10 rounded-xl p-6 border border-purple-500/20">
@@ -96,7 +96,7 @@ export default function AnalyticsPage() {
                                             style={{ width: `${Math.max(width, 5)}%` }}
                                         >
                                             {width > 20 && (
-                                                <span className="text-xs text-white font-medium">${day.revenue.toFixed(0)}</span>
+                                                <span className="text-xs text-white font-medium">Rs. {day.revenue.toFixed(0)}</span>
                                             )}
                                         </div>
                                     </div>
