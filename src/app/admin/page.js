@@ -2,8 +2,7 @@
 
 import { useAdmin } from '../context/AdminContext';
 import Link from 'next/link';
-import { FiShoppingBag, FiTrendingUp, FiPackage, FiDollarSign, FiClock, FiCheckCircle } from 'react-icons/fi';
-import { GiFullPizza } from 'react-icons/gi';
+import { ShoppingBag, TrendingUp, Package, DollarSign, Clock, CheckCircle, Pizza } from 'lucide-react';
 
 export default function AdminDashboard() {
     const { analytics, orders, pizzas, toppings, loading } = useAdmin();
@@ -28,7 +27,7 @@ export default function AdminDashboard() {
                     href="/admin/orders"
                     className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg transition-colors"
                 >
-                    <FiPackage className="w-4 h-4" />
+                    <Package className="w-4 h-4" />
                     View All Orders
                 </Link>
             </div>
@@ -38,7 +37,7 @@ export default function AdminDashboard() {
                 <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center">
-                            <FiShoppingBag className="w-6 h-6 text-primary" />
+                            <ShoppingBag className="w-6 h-6 text-primary" />
                         </div>
                         <div>
                             <p className="text-gray-400 text-sm">Total Orders</p>
@@ -50,7 +49,7 @@ export default function AdminDashboard() {
                 <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
-                            <FiDollarSign className="w-6 h-6 text-green-500" />
+                            <DollarSign className="w-6 h-6 text-green-500" />
                         </div>
                         <div>
                             <p className="text-gray-400 text-sm">Total Revenue</p>
@@ -62,7 +61,7 @@ export default function AdminDashboard() {
                 <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-secondary/20 rounded-lg flex items-center justify-center">
-                            <GiFullPizza className="w-6 h-6 text-secondary" />
+                            <Pizza className="w-6 h-6 text-secondary" />
                         </div>
                         <div>
                             <p className="text-gray-400 text-sm">Active Pizzas</p>
@@ -74,7 +73,7 @@ export default function AdminDashboard() {
                 <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                            <FiTrendingUp className="w-6 h-6 text-blue-500" />
+                            <TrendingUp className="w-6 h-6 text-blue-500" />
                         </div>
                         <div>
                             <p className="text-gray-400 text-sm">Avg Order Value</p>
@@ -148,17 +147,17 @@ export default function AdminDashboard() {
             {/* Quick Actions */}
             <div className="grid sm:grid-cols-3 gap-4">
                 <Link href="/admin/pizzas" className="bg-gray-800 hover:bg-gray-700 rounded-xl p-6 border border-gray-700 transition-colors group">
-                    <GiFullPizza className="w-8 h-8 text-primary mb-3" />
+                    <Pizza className="w-8 h-8 text-primary mb-3" />
                     <h3 className="text-white font-semibold group-hover:text-primary transition-colors">Manage Pizzas</h3>
                     <p className="text-gray-400 text-sm">Add, edit, or disable pizzas</p>
                 </Link>
                 <Link href="/admin/toppings" className="bg-gray-800 hover:bg-gray-700 rounded-xl p-6 border border-gray-700 transition-colors group">
-                    <FiPackage className="w-8 h-8 text-secondary mb-3" />
+                    <Package className="w-8 h-8 text-secondary mb-3" />
                     <h3 className="text-white font-semibold group-hover:text-secondary transition-colors">Manage Toppings</h3>
                     <p className="text-gray-400 text-sm">Update prices & availability</p>
                 </Link>
                 <Link href="/admin/analytics" className="bg-gray-800 hover:bg-gray-700 rounded-xl p-6 border border-gray-700 transition-colors group">
-                    <FiTrendingUp className="w-8 h-8 text-green-500 mb-3" />
+                    <TrendingUp className="w-8 h-8 text-green-500 mb-3" />
                     <h3 className="text-white font-semibold group-hover:text-green-500 transition-colors">View Analytics</h3>
                     <p className="text-gray-400 text-sm">Revenue & performance data</p>
                 </Link>

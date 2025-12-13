@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useContext, useState, useEffect, useRef } from "react";
 import { CartContext } from "../context/CartContext";
-import { FiMenu, FiX, FiShoppingBag, FiUser } from "react-icons/fi";
+import { Menu, X, ShoppingBag, User } from "lucide-react";
 
 const Nav = () => {
   const { isOpen, setIsOpen, itemAmount } = useContext(CartContext);
@@ -99,7 +99,7 @@ const Nav = () => {
                 }`}
               aria-label="Shopping cart"
             >
-              <FiShoppingBag className="w-6 h-6 text-white" />
+              <ShoppingBag className="w-6 h-6 text-white" />
               {itemAmount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-secondary text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
                   {itemAmount}
@@ -109,7 +109,7 @@ const Nav = () => {
 
             {/* Login Button */}
             <button className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-full transition-all duration-200 text-sm font-medium">
-              <FiUser className="w-4 h-4" />
+              <User className="w-4 h-4" />
               <span>Login</span>
             </button>
           </div>
@@ -123,7 +123,7 @@ const Nav = () => {
                 }`}
               aria-label="Shopping cart"
             >
-              <FiShoppingBag className="w-6 h-6 text-white" />
+              <ShoppingBag className="w-6 h-6 text-white" />
               {itemAmount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-secondary text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
                   {itemAmount}
@@ -138,9 +138,9 @@ const Nav = () => {
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? (
-                <FiX className="w-6 h-6 text-white" />
+                <X className="w-6 h-6 text-white" />
               ) : (
-                <FiMenu className="w-6 h-6 text-white" />
+                <Menu className="w-6 h-6 text-white" />
               )}
             </button>
           </div>
@@ -166,7 +166,7 @@ const Nav = () => {
               ))}
               <li>
                 <button className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-full transition-all duration-200 text-sm font-medium w-full justify-center">
-                  <FiUser className="w-4 h-4" />
+                  <User className="w-4 h-4" />
                   <span>Login / Guest</span>
                 </button>
               </li>

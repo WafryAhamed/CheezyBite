@@ -1,41 +1,38 @@
 "use client"
 
 import React from "react";
-import { IoMdCheckmark } from "react-icons/io";
-import { MdOutlineShoppingCart, MdOutlineRestaurant } from "react-icons/md";
-import { GiCookingPot, GiFullMotorcycleHelmet } from "react-icons/gi";
-import { FaHome } from "react-icons/fa";
+import { Check, ShoppingCart, UtensilsCrossed, CookingPot, Bike, Home } from "lucide-react";
 
 const OrderTimeline = ({ order, onClose }) => {
     const stages = [
         {
             id: 0,
             name: "Order Placed",
-            icon: MdOutlineShoppingCart,
+            icon: ShoppingCart,
             description: "We've received your order"
         },
         {
             id: 1,
             name: "Preparing",
-            icon: MdOutlineRestaurant,
+            icon: UtensilsCrossed,
             description: "Chef is preparing your pizza"
         },
         {
             id: 2,
             name: "Baking",
-            icon: GiCookingPot,
+            icon: CookingPot,
             description: "Pizza is in the oven"
         },
         {
             id: 3,
             name: "Out for Delivery",
-            icon: GiFullMotorcycleHelmet,
+            icon: Bike,
             description: "Driver is on the way"
         },
         {
             id: 4,
             name: "Delivered",
-            icon: FaHome,
+            icon: Home,
             description: "Enjoy your meal!"
         },
     ];
@@ -80,13 +77,13 @@ const OrderTimeline = ({ order, onClose }) => {
                                 }`}>
                                 {/* Icon Circle */}
                                 <div className={`relative flex items-center justify-center w-12 h-12 rounded-full border-4 transition-all duration-500 ${isCompleted
-                                        ? 'bg-green-500 border-green-500'
-                                        : isCurrent
-                                            ? 'bg-primary border-primary animate-pulse'
-                                            : 'bg-gray-200 border-gray-300'
+                                    ? 'bg-green-500 border-green-500'
+                                    : isCurrent
+                                        ? 'bg-primary border-primary animate-pulse'
+                                        : 'bg-gray-200 border-gray-300'
                                     }`}>
                                     {isCompleted ? (
-                                        <IoMdCheckmark className="text-white text-2xl" />
+                                        <Check className="text-white text-2xl" />
                                     ) : (
                                         <Icon className={`text-2xl ${isCurrent ? 'text-white' : 'text-gray-500'}`} />
                                     )}

@@ -3,7 +3,7 @@
 import { useAdmin } from '../../context/AdminContext';
 import { useState } from 'react';
 import Image from 'next/image';
-import { FiPlus, FiEdit2, FiToggleLeft, FiToggleRight, FiX, FiDollarSign } from 'react-icons/fi';
+import { Plus, Pencil, ToggleLeft, ToggleRight, X, DollarSign } from 'lucide-react';
 
 export default function ToppingsPage() {
     const { toppings, updateTopping, toggleToppingEnabled, addTopping } = useAdmin();
@@ -57,7 +57,7 @@ export default function ToppingsPage() {
                     onClick={openAddModal}
                     className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg transition-colors"
                 >
-                    <FiPlus className="w-4 h-4" />
+                    <Plus className="w-4 h-4" />
                     Add Topping
                 </button>
             </div>
@@ -91,11 +91,11 @@ export default function ToppingsPage() {
                                     <button
                                         onClick={() => toggleToppingEnabled(topping.id)}
                                         className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm ${topping.enabled
-                                                ? 'bg-green-500/20 text-green-400'
-                                                : 'bg-red-500/20 text-red-400'
+                                            ? 'bg-green-500/20 text-green-400'
+                                            : 'bg-red-500/20 text-red-400'
                                             }`}
                                     >
-                                        {topping.enabled ? <FiToggleRight className="w-4 h-4" /> : <FiToggleLeft className="w-4 h-4" />}
+                                        {topping.enabled ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
                                         {topping.enabled ? 'Active' : 'Disabled'}
                                     </button>
                                 </td>
@@ -104,7 +104,7 @@ export default function ToppingsPage() {
                                         onClick={() => openEditModal(topping)}
                                         className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
                                     >
-                                        <FiEdit2 className="w-4 h-4" />
+                                        <Pencil className="w-4 h-4" />
                                     </button>
                                 </td>
                             </tr>
@@ -122,7 +122,7 @@ export default function ToppingsPage() {
                                 {editingTopping ? 'Edit Topping' : 'Add New Topping'}
                             </h2>
                             <button onClick={() => setIsModalOpen(false)} className="p-2 text-gray-400 hover:text-white">
-                                <FiX className="w-5 h-5" />
+                                <X className="w-5 h-5" />
                             </button>
                         </div>
                         <form onSubmit={handleSubmit} className="p-4 space-y-4">

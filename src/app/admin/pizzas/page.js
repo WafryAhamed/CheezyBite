@@ -3,7 +3,7 @@
 import { useAdmin } from '../../context/AdminContext';
 import { useState } from 'react';
 import Image from 'next/image';
-import { FiPlus, FiEdit2, FiTrash2, FiToggleLeft, FiToggleRight, FiX } from 'react-icons/fi';
+import { Plus, Pencil, Trash2, ToggleLeft, ToggleRight, X } from 'lucide-react';
 
 export default function PizzasPage() {
     const { pizzas, addPizza, updatePizza, togglePizzaEnabled, deletePizza, toppings } = useAdmin();
@@ -71,7 +71,7 @@ export default function PizzasPage() {
                     onClick={openAddModal}
                     className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg transition-colors"
                 >
-                    <FiPlus className="w-4 h-4" />
+                    <Plus className="w-4 h-4" />
                     Add Pizza
                 </button>
             </div>
@@ -109,7 +109,7 @@ export default function PizzasPage() {
                                     onClick={() => togglePizzaEnabled(pizza.id)}
                                     className={`flex items-center gap-2 text-sm ${pizza.enabled ? 'text-green-400' : 'text-red-400'}`}
                                 >
-                                    {pizza.enabled ? <FiToggleRight className="w-5 h-5" /> : <FiToggleLeft className="w-5 h-5" />}
+                                    {pizza.enabled ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
                                     {pizza.enabled ? 'Enabled' : 'Disabled'}
                                 </button>
                                 <div className="flex gap-2">
@@ -117,13 +117,13 @@ export default function PizzasPage() {
                                         onClick={() => openEditModal(pizza)}
                                         className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
                                     >
-                                        <FiEdit2 className="w-4 h-4" />
+                                        <Pencil className="w-4 h-4" />
                                     </button>
                                     <button
                                         onClick={() => deletePizza(pizza.id)}
                                         className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                                     >
-                                        <FiTrash2 className="w-4 h-4" />
+                                        <Trash2 className="w-4 h-4" />
                                     </button>
                                 </div>
                             </div>
@@ -144,7 +144,7 @@ export default function PizzasPage() {
                                 onClick={() => setIsModalOpen(false)}
                                 className="p-2 text-gray-400 hover:text-white"
                             >
-                                <FiX className="w-5 h-5" />
+                                <X className="w-5 h-5" />
                             </button>
                         </div>
                         <form onSubmit={handleSubmit} className="p-4 space-y-4">

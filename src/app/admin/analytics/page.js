@@ -1,7 +1,7 @@
 "use client";
 
 import { useAdmin } from '../../context/AdminContext';
-import { FiTrendingUp, FiShoppingBag, FiDollarSign, FiPieChart } from 'react-icons/fi';
+import { TrendingUp, ShoppingBag, DollarSign, PieChart } from 'lucide-react';
 
 export default function AnalyticsPage() {
     const { analytics, orders, loading } = useAdmin();
@@ -37,7 +37,7 @@ export default function AnalyticsPage() {
                 <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/10 rounded-xl p-6 border border-blue-500/20">
                     <div className="flex items-center gap-3 mb-4">
                         <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                            <FiShoppingBag className="w-5 h-5 text-blue-400" />
+                            <ShoppingBag className="w-5 h-5 text-blue-400" />
                         </div>
                         <span className="text-gray-400">Total Orders</span>
                     </div>
@@ -48,7 +48,7 @@ export default function AnalyticsPage() {
                 <div className="bg-gradient-to-br from-green-500/20 to-green-600/10 rounded-xl p-6 border border-green-500/20">
                     <div className="flex items-center gap-3 mb-4">
                         <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
-                            <FiDollarSign className="w-5 h-5 text-green-400" />
+                            <DollarSign className="w-5 h-5 text-green-400" />
                         </div>
                         <span className="text-gray-400">Total Revenue</span>
                     </div>
@@ -59,7 +59,7 @@ export default function AnalyticsPage() {
                 <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/10 rounded-xl p-6 border border-purple-500/20">
                     <div className="flex items-center gap-3 mb-4">
                         <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                            <FiTrendingUp className="w-5 h-5 text-purple-400" />
+                            <TrendingUp className="w-5 h-5 text-purple-400" />
                         </div>
                         <span className="text-gray-400">Completion Rate</span>
                     </div>
@@ -70,7 +70,7 @@ export default function AnalyticsPage() {
                 <div className="bg-gradient-to-br from-orange-500/20 to-orange-600/10 rounded-xl p-6 border border-orange-500/20">
                     <div className="flex items-center gap-3 mb-4">
                         <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                            <FiPieChart className="w-5 h-5 text-orange-400" />
+                            <PieChart className="w-5 h-5 text-orange-400" />
                         </div>
                         <span className="text-gray-400">Active Menu</span>
                     </div>

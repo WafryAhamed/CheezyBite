@@ -5,6 +5,7 @@ import Nav from './components/Nav';
 import Footer from './components/Footer';
 import CartProvider from './context/CartContext';
 import OrderProvider from './context/OrderContext';
+import ClientCleanup from './components/ClientCleanup';
 import './globals.css';
 import { Bangers, Quicksand, Roboto_Condensed } from 'next/font/google';
 import { Toaster } from 'react-hot-toast';
@@ -64,6 +65,7 @@ export default function RootLayout({ children }) {
                 },
               }}
             />
+            <ClientCleanup />
             <Nav />
             <CartMobileIcon />
             <CartMobile />

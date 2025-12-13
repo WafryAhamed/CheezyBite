@@ -2,7 +2,7 @@
 
 import { useAdmin } from '../../context/AdminContext';
 import { useState, useEffect } from 'react';
-import { FiRefreshCw, FiChevronDown, FiChevronUp, FiClock, FiCheckCircle } from 'react-icons/fi';
+import { RefreshCw, ChevronDown, ChevronUp, Clock, CheckCircle } from 'lucide-react';
 
 export default function OrdersPage() {
     const { orders, updateOrderStatus, refreshOrders } = useAdmin();
@@ -34,7 +34,7 @@ export default function OrdersPage() {
                     onClick={refreshOrders}
                     className="inline-flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
                 >
-                    <FiRefreshCw className="w-4 h-4" />
+                    <RefreshCw className="w-4 h-4" />
                     Refresh
                 </button>
             </div>
@@ -73,9 +73,9 @@ export default function OrdersPage() {
                                         {stageNames[order.currentStage]}
                                     </span>
                                     {expandedOrder === order.id ? (
-                                        <FiChevronUp className="w-5 h-5 text-gray-400" />
+                                        <ChevronUp className="w-5 h-5 text-gray-400" />
                                     ) : (
-                                        <FiChevronDown className="w-5 h-5 text-gray-400" />
+                                        <ChevronDown className="w-5 h-5 text-gray-400" />
                                     )}
                                 </div>
                             </div>
@@ -110,8 +110,8 @@ export default function OrdersPage() {
                                                     onClick={() => updateOrderStatus(order.id, index)}
                                                     disabled={order.currentStage === index}
                                                     className={`px-3 py-2 rounded-lg text-sm transition-colors ${order.currentStage === index
-                                                            ? `${stageColors[index]} text-white cursor-default`
-                                                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                                        ? `${stageColors[index]} text-white cursor-default`
+                                                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                                         }`}
                                                 >
                                                     {stageEmojis[index]} {stage}

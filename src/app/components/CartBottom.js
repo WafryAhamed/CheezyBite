@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { IoCloseOutline } from "react-icons/io5";
+import { X } from "lucide-react";
 import CheckoutDetails from "./CheckoutDetails";
 import Modal from "react-modal";
 import { CartContext } from "../context/CartContext";
@@ -58,7 +58,7 @@ const CartBottom = () => {
           contentLabel="Checkout Modal"
         >
           <div onClick={closeModal} className="absolute z-30 right-2 top-2 hover:scale-110 duration-200 cursor-pointer">
-            <IoCloseOutline className="text-4xl text-orange" />
+            <X className="text-4xl text-orange" />
           </div>
           <CheckoutDetails setModal={setModal} />
         </Modal>}

@@ -4,8 +4,7 @@ import { useAdmin } from '../context/AdminContext';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FiHome, FiPieChart, FiShoppingBag, FiSettings, FiLogOut, FiMenu, FiX, FiLayers, FiPackage } from 'react-icons/fi';
-import { GiFullPizza } from 'react-icons/gi';
+import { Home, PieChart, ShoppingBag, Settings, LogOut, Menu, X, Layers, Package, Pizza } from 'lucide-react';
 
 const AdminLayout = ({ children }) => {
     const { isAuthenticated, logout, login, loading } = useAdmin();
@@ -14,11 +13,11 @@ const AdminLayout = ({ children }) => {
     const router = useRouter();
 
     const navItems = [
-        { name: 'Dashboard', href: '/admin', icon: FiHome },
-        { name: 'Pizzas', href: '/admin/pizzas', icon: GiFullPizza },
-        { name: 'Toppings', href: '/admin/toppings', icon: FiLayers },
-        { name: 'Orders', href: '/admin/orders', icon: FiPackage },
-        { name: 'Analytics', href: '/admin/analytics', icon: FiPieChart },
+        { name: 'Dashboard', href: '/admin', icon: Home },
+        { name: 'Pizzas', href: '/admin/pizzas', icon: Pizza },
+        { name: 'Toppings', href: '/admin/toppings', icon: Layers },
+        { name: 'Orders', href: '/admin/orders', icon: Package },
+        { name: 'Analytics', href: '/admin/analytics', icon: PieChart },
     ];
 
     if (loading) {
@@ -36,7 +35,7 @@ const AdminLayout = ({ children }) => {
                 <div className="bg-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-md border border-gray-700">
                     <div className="text-center mb-8">
                         <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/20 rounded-full mb-4">
-                            <GiFullPizza className="w-8 h-8 text-primary" />
+                            <Pizza className="w-8 h-8 text-primary" />
                         </div>
                         <h1 className="text-2xl font-bold text-white">CheezyBite Admin</h1>
                         <p className="text-gray-400 mt-2">Enter password to access dashboard</p>
@@ -77,7 +76,7 @@ const AdminLayout = ({ children }) => {
                 <div className="p-6 border-b border-gray-700">
                     <Link href="/admin" className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
-                            <GiFullPizza className="w-6 h-6 text-primary" />
+                            <Pizza className="w-6 h-6 text-primary" />
                         </div>
                         <div>
                             <div className="font-bold text-white">CheezyBite</div>
@@ -101,14 +100,14 @@ const AdminLayout = ({ children }) => {
 
                 <div className="p-4 border-t border-gray-700">
                     <Link href="/" className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-colors mb-2">
-                        <FiShoppingBag className="w-5 h-5" />
+                        <ShoppingBag className="w-5 h-5" />
                         <span>View Store</span>
                     </Link>
                     <button
                         onClick={logout}
                         className="flex items-center gap-3 px-4 py-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors w-full"
                     >
-                        <FiLogOut className="w-5 h-5" />
+                        <LogOut className="w-5 h-5" />
                         <span>Logout</span>
                     </button>
                 </div>
@@ -117,14 +116,14 @@ const AdminLayout = ({ children }) => {
             {/* Mobile Header */}
             <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-gray-800 border-b border-gray-700 px-4 py-3 flex items-center justify-between">
                 <Link href="/admin" className="flex items-center gap-2">
-                    <GiFullPizza className="w-6 h-6 text-primary" />
+                    <Pizza className="w-6 h-6 text-primary" />
                     <span className="font-bold text-white">Admin</span>
                 </Link>
                 <button
                     onClick={() => setSidebarOpen(!sidebarOpen)}
                     className="p-2 text-gray-400 hover:text-white"
                 >
-                    {sidebarOpen ? <FiX className="w-6 h-6" /> : <FiMenu className="w-6 h-6" />}
+                    {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                 </button>
             </div>
 
@@ -147,7 +146,7 @@ const AdminLayout = ({ children }) => {
                         </nav>
                         <div className="mt-4 pt-4 border-t border-gray-700">
                             <button onClick={logout} className="flex items-center gap-3 px-4 py-3 text-red-400 w-full">
-                                <FiLogOut className="w-5 h-5" />
+                                <LogOut className="w-5 h-5" />
                                 <span>Logout</span>
                             </button>
                         </div>

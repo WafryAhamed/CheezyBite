@@ -1,7 +1,6 @@
 import Image from "next/image";
 import { useContext } from "react";
-import { BiPlus, BiMinus } from "react-icons/bi";
-import { IoCloseOutline } from "react-icons/io5";
+import { Plus, Minus, X } from "lucide-react";
 import { CartContext } from "../context/CartContext";
 
 const CartItem = ({ pizza }) => {
@@ -19,16 +18,16 @@ const CartItem = ({ pizza }) => {
             <div className="capitalize font-medium text-[15px]">{pizza.crust} crust</div>
             <div className="capitalize mb-2 font-medium text-[15px]">{pizza.size} size</div>
             <div className="flex items-center gap-x-1">
-              <div onClick={() => decreaseAmount(pizza.id, pizza.price)} className="w-[18px] h-[18px] flex justify-center items-center cursor-pointer text-white gradient rounded-full"><BiMinus /></div>
+              <div onClick={() => decreaseAmount(pizza.id, pizza.price)} className="w-[18px] h-[18px] flex justify-center items-center cursor-pointer text-white gradient rounded-full"><Minus className="w-3 h-3" /></div>
               <div className="font-semibold flex flex-1 max-w-[30px] justify-center items-center text-sm">{pizza.amount}</div>
-              <div onClick={() => increaseAmount(pizza.id, pizza.price)} className="w-[18px] h-[18px] flex justify-center items-center cursor-pointer text-white gradient rounded-full"><BiPlus /></div>
+              <div onClick={() => increaseAmount(pizza.id, pizza.price)} className="w-[18px] h-[18px] flex justify-center items-center cursor-pointer text-white gradient rounded-full"><Plus className="w-3 h-3" /></div>
             </div>
           </div>
         </div>
 
         <div className="flex flex-col justify-between">
           <div onClick={() => removeItem(pizza.id, pizza.price, pizza.crust)} className="text-2xl flex justify-center items-center self-end cursor-pointer hover:scale-110 duration-100 transition-all text-orange">
-            <IoCloseOutline />
+            <X className="w-6 h-6" />
           </div>
           <div>
             <span className="text-[17px] font-medium font-robotoCondensed">Rs. {parseFloat(pizza.price * pizza.amount).toLocaleString()}</span>
