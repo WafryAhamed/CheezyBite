@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Flame, Leaf, Pizza } from 'lucide-react';
+import { Flame, Leaf, Pizza, CupSoda } from 'lucide-react';
 
 const Banner = () => {
   // Smooth scroll to menu section
@@ -132,9 +132,9 @@ const Banner = () => {
                 <Pizza className="w-10 h-10 text-white/80 hover:text-secondary transition-colors drop-shadow-lg p-2 bg-white/20 rounded-full backdrop-blur-sm" />
               </div>
 
-              {/* Floating Ingredient - Flame */}
+              {/* Floating Ingredient - Drink (CupSoda) */}
               <div className="absolute bottom-16 left-0 hidden lg:block">
-                <Flame className="w-14 h-14 text-secondary drop-shadow-lg rotate-12" />
+                <CupSoda className="w-14 h-14 text-white/80 hover:text-secondary transition-colors drop-shadow-lg -rotate-12" />
               </div>
 
               {/* Floating Badge */}
