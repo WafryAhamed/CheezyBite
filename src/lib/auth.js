@@ -95,3 +95,66 @@ export function forbiddenResponse(message = 'Access forbidden') {
 export function isAdmin(user) {
     return user && user.role && ['Super Admin', 'Manager'].includes(user.role);
 }
+
+/**
+ * Set authentication cookie (httpOnly for security)
+ */
+export function setAuthCookie(token) {
+    // This will be used in API routes with Next.js cookies()
+    return {
+        name: 'token',
+        value: token,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+        path: '/'
+    };
+}
+
+/**
+ * Extract token from cookie or Authorization header
+ * Prioritizes httpOnly cookie for security
+ */
+export function extractTokenFromRequest(request) {
+    // Try to get from cookie first (more secure)
+    const cookieHeader = request.headers.get('cookie');
+    if (cookieHeader) {
+        const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
+            const [key, value] = cookie.trim().split('=');
+            acc[key] = value;
+            return acc;
+        }, {});
+
+        if (cookies.token) {
+            return cookies.token;
+        }
+    }
+
+    // Fallback to Authorization header (for API clients)
+    const authHeader = request.headers.get('authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        return authHeader.substring(7);
+    }
+
+    return null;
+}
+
+/**
+ * Middleware to verify authentication (updated for cookies)
+ * Returns user/admin data if authenticated, null otherwise
+ */
+export async function authenticate(request) {
+    const token = extractTokenFromRequest(request);
+
+    if (!token) {
+        return null;
+    }
+
+    try {
+        const decoded = verifyToken(token);
+        return decoded;
+    } catch (error) {
+        return null;
+    }
+}

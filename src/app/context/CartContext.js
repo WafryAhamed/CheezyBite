@@ -4,6 +4,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { saveCart, loadCart, clearCart as clearStoredCart } from "../utils/localStorageHelper";
 import { useCartSync } from "../hooks/useCartSync";
+import { useUser } from "./UserContext";
 import toast from 'react-hot-toast';
 
 export const CartContext = createContext();
@@ -14,11 +15,19 @@ export const useCart = () => {
 
 const CartProvider = ({ children }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const { user } = useUser();
     const [cart, setCart] = useState([]);
     const [cartTotal, setCartTotal] = useState(0);
     const [itemAmount, setItemAmount] = useState(0);
     const [lastRemovedItem, setLastRemovedItem] = useState(null);
     const [editingItem, setEditingItem] = useState(null);
+
+    // Get user from context to handle sync
+    // Note: circular dependency might be an issue if we import direct. 
+    // Best way: pass user as prop or rely on a check.
+    // Actually, we can use useUser() hook if we import it.
+
+    const useBackend = process.env.NEXT_PUBLIC_USE_API_BACKEND === 'true';
 
     // Load cart from localStorage on mount
     useEffect(() => {
@@ -36,14 +45,72 @@ const CartProvider = ({ children }) => {
         }
     }, []);
 
+    // HYBRID CART STRATEGY: Sync with Backend
+    useEffect(() => {
+        const syncCart = async () => {
+            if (useBackend && user) {
+                try {
+                    const { cartService } = await import('@/services/cartService');
+
+                    // On User Login (user became available), merge local cart to DB
+                    // The API `/api/cart` (POST) handles merge if we send current items
+                    // We need to distinguish between "Initial Load/Merge" and "Update"
+                    // Simple strategy: Always push current state to server? 
+                    // No, that overwrites server state if we start with empty local cart.
+
+                    // improved strategy:
+                    // 1. If we have local items, push them to merge.
+                    // 2. Fetch latest cart from server to sync state.
+
+                    if (cart.length > 0) {
+                        // Merge local items to server
+                        await cartService.syncCart(cart, true);
+                    }
+
+                    // Fetch unified cart from server
+                    const response = await cartService.getCart();
+                    if (response.success) {
+                        setCart(response.data.items);
+                        // Clear local storage to avoid confusion? 
+                        // Or keep it as cache? Let's keep it to be safe for offline, 
+                        // but `saveCart` below handles that.
+                    }
+                } catch (error) {
+                    console.error("Cart sync failed", error);
+                }
+            }
+        };
+
+        // Only run this when user changes (logs in)
+        if (user) {
+            syncCart();
+        }
+    }, [user, useBackend]);
+
     // Persist cart to localStorage whenever it changes
+    // AND sync to backend if logged in
     useEffect(() => {
         if (cart.length >= 0) {
             saveCart(cart);
-        }
-    }, [cart]);
 
-    // Enable cross-tab sync
+            // Sync to backend if logged in (Debounce this in real app, but ok for now)
+            if (useBackend && user && cart.length > 0) {
+                // Use a small timeout to avoid blocking or rapid calls
+                const timer = setTimeout(async () => {
+                    try {
+                        const { cartService } = await import('@/services/cartService');
+                        // merge=false means overwrite with current state
+                        await cartService.syncCart(cart, false);
+                    } catch (e) {
+                        console.error("Background cart sync failed", e);
+                    }
+                }, 500);
+                return () => clearTimeout(timer);
+            }
+        }
+    }, [cart, user, useBackend]);
+
+    // Enable cross-tab sync (Only for Guest mode mostly, but keeps tabs in sync)
     useCartSync(cart, setCart);
 
     // Calculate totals

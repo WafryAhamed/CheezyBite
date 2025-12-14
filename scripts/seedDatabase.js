@@ -1,9 +1,15 @@
-import dbConnect from '@/lib/dbConnect';
-import User from '@/models/User';
-import Admin from '@/models/Admin';
-import Pizza from '@/models/Pizza';
-import Topping from '@/models/Topping';
-import Order from '@/models/Order';
+// Fix imports for Node.js execution (no webpack aliases)
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env.local') });
+
+// Helper to handle both standard and relative imports if needed, 
+// strictly pointing to src/lib/dbConnect.js relative to scripts/
+const dbConnect = require('../src/lib/dbConnect').default || require('../src/lib/dbConnect');
+const User = require('../src/models/User').default || require('../src/models/User');
+const Admin = require('../src/models/Admin').default || require('../src/models/Admin');
+const Pizza = require('../src/models/Pizza').default || require('../src/models/Pizza');
+const Topping = require('../src/models/Topping').default || require('../src/models/Topping');
+const Order = require('../src/models/Order').default || require('../src/models/Order');
 import bcrypt from 'bcryptjs';
 import { DEFAULT_PIZZAS, DEFAULT_TOPPINGS } from '@/app/utils/adminStorageHelper';
 
