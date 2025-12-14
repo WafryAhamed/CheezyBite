@@ -23,7 +23,7 @@ const Banner = () => {
         <div className="w-full flex flex-col lg:flex-row justify-between items-center gap-8 lg:gap-4">
 
           {/* LEFT: Content Section */}
-          <div className="flex flex-col items-center lg:items-start text-center lg:text-left flex-1 px-6 lg:px-0 max-w-2xl">
+          <div className="flex flex-col items-start text-left flex-1 px-4 lg:px-0 max-w-2xl">
             {/* Trust Badge */}
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 mb-6 mt-4 lg:mt-0">
               <span className="text-secondary text-lg">★</span>
@@ -35,10 +35,10 @@ const Banner = () => {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              className="text-4xl sm:text-5xl lg:text-7xl font-poppins font-bold text-white drop-shadow-lg leading-snug mb-6"
+              className="text-4xl sm:text-5xl lg:text-7xl font-poppins font-bold text-white drop-shadow-lg leading-tight mb-6"
             >
               Where Every Bite
-              <span className="block text-secondary mt-2">Arrives Perfect.</span>
+              <span className="block text-secondary">Arrives Perfect.</span>
             </motion.h1>
 
             {/* Subtext - Fade In Only (Delayed) */}
