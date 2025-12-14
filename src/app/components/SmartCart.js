@@ -186,7 +186,7 @@ const SmartCart = () => {
                             </div>
 
                             {/* Scrollable List */}
-                            <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-primary scrollbar-track-transparent">
+                            <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-primary scrollbar-track-transparent max-h-[60dvh]">
                                 {cart.length > 0 ? (
                                     <div className="flex flex-col gap-4">
                                         {cart.map((item, idx) => (
