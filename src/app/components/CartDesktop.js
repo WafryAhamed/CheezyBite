@@ -27,7 +27,7 @@ const CartDesktop = () => {
         lg:${isOpen ? 'translate-x-0' : 'translate-x-full'}
       `}>
         <CartTop />
-        <div className={`flex-1 overflow-y-auto px-4 py-4 scrollbar-thin scrollbar-thumb-primary scrollbar-track-softBlack`}>
+        <div className={`flex-1 overflow-y-auto px-4 py-4 scrollbar-thin scrollbar-thumb-primary scrollbar-track-softBlack max-h-[60dvh] lg:max-h-[75dvh]`}>
           {cart.length > 0 ? (
             <div className="flex flex-col gap-y-4">
               {cart.map((pizza, index) => (
