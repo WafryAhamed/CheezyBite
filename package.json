@@ -7,16 +7,26 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "server": "node server/index.js",
+    "seed": "node scripts/seedDatabase.js",
+    "dev:all": "concurrently \"npm run dev\" \"npm run server\"",
+    "db:reset": "node scripts/resetDatabase.js"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",
     "@next/bundle-analyzer": "^16.0.10",
+    "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
     "eslint": "8.37.0",
     "eslint-config-next": "13.2.4",
+    "express": "^5.2.1",
     "framer-motion": "^12.23.26",
+    "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.561.0",
+    "mongoose": "^9.0.1",
     "next": "^16.0.10",
     "react": "18.2.0",
     "react-dom": "18.2.0",
@@ -25,12 +35,15 @@
     "react-modal": "^3.16.1",
     "react-parallax-mouse": "^2.0.1",
     "recharts": "^3.5.1",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
     "tailwind-merge": "^3.4.0",
     "tailwind-scrollbar": "^3.0.0",
     "zustand": "^5.0.9"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.14",
+    "concurrently": "^9.2.1",
     "husky": "^9.1.7",
     "postcss": "^8.4.21",
     "tailwindcss": "^3.3.1"
