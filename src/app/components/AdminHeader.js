@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
     Pizza, Search, Bell, ChevronDown, LogOut,
-    LayoutDashboard, ShoppingBag, Users, Settings
+    LayoutDashboard, ShoppingBag, Users, Settings, Menu
 } from 'lucide-react';
 import { useState } from 'react';
 
