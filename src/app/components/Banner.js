@@ -35,10 +35,9 @@ const Banner = () => {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              className="text-4xl sm:text-5xl lg:text-7xl font-poppins font-bold text-white drop-shadow-lg leading-tight mb-6"
+              className="text-3xl sm:text-4xl lg:text-6xl font-poppins font-bold text-white drop-shadow-lg leading-tight mb-8"
             >
-              Where Every Bite
-              <span className="block text-secondary">Arrives Perfect.</span>
+              Where Every Bite <span className="text-secondary">Arrives Perfect</span>
             </motion.h1>
 
             {/* Subtext - Fade In Only (Delayed) */}
@@ -46,9 +45,9 @@ const Banner = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.2, delay: 0.08 }}
-              className="text-white/80 text-lg lg:text-xl font-inter font-medium mb-8 max-w-sm lg:max-w-lg mx-auto lg:mx-0 leading-relaxed"
+              className="text-white/80 text-base sm:text-lg font-inter font-medium mb-8 whitespace-nowrap"
             >
-              30 min delivery · Fresh ingredients · Secure payments
+              • Hot & fresh • Fast delivery • Secure payments
             </motion.p>
 
             {/* CTA Buttons - Static Entry, Scalable Interaction */}
