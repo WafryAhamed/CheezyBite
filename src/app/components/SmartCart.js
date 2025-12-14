@@ -28,6 +28,14 @@ const SmartCart = () => {
     // Touch handling for Swipe Gestures
     const touchStartY = useRef(0);
     const touchEndY = useRef(0);
+    const itemsRef = useRef(null);
+
+    // Auto-scroll logic
+    useEffect(() => {
+        if (cart.length >= 2) {
+            itemsRef.current?.scrollTo({ top: 0 });
+        }
+    }, [cart.length]);
 
     // Pulse animation on cart update
     useEffect(() => {
@@ -118,7 +126,7 @@ const SmartCart = () => {
                 transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                 className={`fixed z-50 bg-charcoalBlack border border-white/10 shadow-2xl overflow-hidden flex flex-col
                     ${isOpen
-                        ? 'bottom-0 left-0 right-0 h-[85dvh] lg:h-auto lg:max-h-[85dvh] lg:w-[450px] lg:bottom-4 lg:right-4 lg:left-auto rounded-t-[30px] lg:rounded-3xl'
+                        ? 'bottom-0 left-0 right-0 max-h-[85vh] lg:h-auto lg:max-h-[85dvh] lg:w-[450px] lg:bottom-4 lg:right-4 lg:left-auto rounded-t-[30px] lg:rounded-3xl'
                         : 'bottom-4 left-4 right-4 lg:left-auto lg:right-8 lg:w-auto h-16 rounded-full cursor-pointer'
                     }
                 `}
@@ -186,7 +194,7 @@ const SmartCart = () => {
                             </div>
 
                             {/* Scrollable List */}
-                            <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-primary scrollbar-track-transparent max-h-[60dvh]">
+                            <div ref={itemsRef} className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-primary scrollbar-track-transparent">
                                 {cart.length > 0 ? (
                                     <div className="flex flex-col gap-4">
                                         {cart.map((item, idx) => (
