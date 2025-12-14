@@ -236,6 +236,11 @@ export function isAdminLoggedIn() {
     }
 }
 
+export function getAdminRole() {
+    if (!isBrowser()) return null;
+    return localStorage.getItem(ADMIN_AUTH_KEY + '_role');
+}
+
 export function getAdminUsername() {
     if (!isBrowser()) return null;
     return localStorage.getItem(ADMIN_AUTH_KEY + '_username');
