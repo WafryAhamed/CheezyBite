@@ -4,10 +4,15 @@ import React, { useState, useEffect } from 'react';
 import PizzaGrid from '../../components/PizzaGrid';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
+import { useSocket } from '../../context/SocketContext';
+import { useCart } from '../../context/CartContext';
+import toast from 'react-hot-toast';
 
 export default function MenuClient({ initialPizzas = [] }) {
     const searchParams = useSearchParams();
     const initialFilter = searchParams.get('filter');
+    const couponParam = searchParams.get('coupon');
+    const { addToCart } = useCart();
 
     const [pizzas, setPizzas] = useState(initialPizzas);
     const [filteredPizzas, setFilteredPizzas] = useState(initialPizzas);
@@ -31,7 +36,40 @@ export default function MenuClient({ initialPizzas = [] }) {
         if (initialFilter === 'offers') {
             // Logic for offers if we had an 'offer' field
         }
-    }, [initialFilter]);
+        // Show toast if coupon detected from URL
+        if (couponParam) {
+            toast.success(`🎉 Coupon ${couponParam} selected! Add items to cart and proceed to checkout.`, {
+                duration: 5000,
+                position: 'top-center',
+            });
+        }
+    }, [initialFilter, couponParam]);
+
+    // Real-time Menu Updates
+    const { socket, subscribeToMenu } = useSocket();
+
+    useEffect(() => {
+        if (socket) {
+            subscribeToMenu();
+
+            const handleUpdate = (data) => {
+                console.log('🍕 Menu Update Received:', data);
+                if (data.type === 'update') {
+                    setPizzas(prev => prev.map(p => p.id === data.pizza.id ? data.pizza : p));
+                } else if (data.type === 'add') {
+                    setPizzas(prev => [data.pizza, ...prev]);
+                } else if (data.type === 'delete') {
+                    setPizzas(prev => prev.filter(p => p.id !== data.pizzaId));
+                }
+            };
+
+            socket.on('menu_updated', handleUpdate);
+
+            return () => {
+                socket.off('menu_updated', handleUpdate);
+            };
+        }
+    }, [socket, subscribeToMenu]);
 
 
     // Handle Filtering & Sorting
@@ -135,7 +173,7 @@ export default function MenuClient({ initialPizzas = [] }) {
                 </div>
 
                 {filteredPizzas.length > 0 ? (
-                    <PizzaGrid pizzas={filteredPizzas} />
+                    <PizzaGrid pizzas={filteredPizzas} addToCart={addToCart} />
                 ) : (
                     <div className="text-center py-20 bg-softBlack/50 rounded-2xl border border-cardBorder/50 border-dashed">
                         <div className="inline-block p-4 rounded-full bg-cardBorder mb-4">

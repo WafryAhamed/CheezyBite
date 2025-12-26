@@ -1,26 +1,7 @@
-import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import { verifyToken, extractTokenFromRequest } from './token.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'cheezybite-jwt-secret-key';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
-
-/**
- * Generate JWT token for user/admin
- */
-export function generateToken(payload, expiresIn = JWT_EXPIRES_IN) {
-    return jwt.sign(payload, JWT_SECRET, { expiresIn });
-}
-
-/**
- * Verify JWT token
- */
-export function verifyToken(token) {
-    try {
-        return jwt.verify(token, JWT_SECRET);
-    } catch (error) {
-        throw new Error('Invalid token');
-    }
-}
+export * from './token.js';
 
 /**
  * Hash password using bcrypt
@@ -38,35 +19,35 @@ export async function comparePassword(password, hash) {
 }
 
 /**
- * Extract token from Authorization header
- */
-export function extractToken(request) {
-    const authHeader = request.headers.get('authorization');
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return null;
-    }
-
-    return authHeader.substring(7);
-}
-
-/**
  * Middleware to verify authentication
  * Returns user/admin data if authenticated, null otherwise
  */
 export async function authenticate(request) {
-    const token = extractToken(request);
+    const token = extractTokenFromRequest(request);
 
     if (!token) {
+        console.log('🔍 authenticate(): No token found in request');
         return null;
     }
 
     try {
         const decoded = verifyToken(token);
+        console.log('✅ authenticate(): Token verified, decoded:', { type: decoded.type, role: decoded.role, userId: decoded.userId, adminId: decoded.adminId });
         return decoded;
     } catch (error) {
-        return null;
+        console.log('❌ authenticate(): Token verification failed:', error.message);
+        return null; // Return null if verification fails
     }
+}
+
+/**
+ * Check if user/admin has admin privileges
+ */
+export function isAdmin(authData) {
+    if (!authData || authData.type !== 'admin') {
+        return false;
+    }
+    return ['Super Admin', 'Manager'].includes(authData.role);
 }
 
 /**
@@ -87,74 +68,4 @@ export function forbiddenResponse(message = 'Access forbidden') {
         { success: false, error: message },
         { status: 403 }
     );
-}
-
-/**
- * Check if user has admin role
- */
-export function isAdmin(user) {
-    return user && user.role && ['Super Admin', 'Manager'].includes(user.role);
-}
-
-/**
- * Set authentication cookie (httpOnly for security)
- */
-export function setAuthCookie(token) {
-    // This will be used in API routes with Next.js cookies()
-    return {
-        name: 'token',
-        value: token,
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-        path: '/'
-    };
-}
-
-/**
- * Extract token from cookie or Authorization header
- * Prioritizes httpOnly cookie for security
- */
-export function extractTokenFromRequest(request) {
-    // Try to get from cookie first (more secure)
-    const cookieHeader = request.headers.get('cookie');
-    if (cookieHeader) {
-        const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
-            const [key, value] = cookie.trim().split('=');
-            acc[key] = value;
-            return acc;
-        }, {});
-
-        if (cookies.token) {
-            return cookies.token;
-        }
-    }
-
-    // Fallback to Authorization header (for API clients)
-    const authHeader = request.headers.get('authorization');
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-        return authHeader.substring(7);
-    }
-
-    return null;
-}
-
-/**
- * Middleware to verify authentication (updated for cookies)
- * Returns user/admin data if authenticated, null otherwise
- */
-export async function authenticate(request) {
-    const token = extractTokenFromRequest(request);
-
-    if (!token) {
-        return null;
-    }
-
-    try {
-        const decoded = verifyToken(token);
-        return decoded;
-    } catch (error) {
-        return null;
-    }
 }

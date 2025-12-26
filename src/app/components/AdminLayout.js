@@ -4,7 +4,7 @@ import { useAdmin } from '../context/AdminContext';
 import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Home, PieChart, ShoppingBag, Settings, LogOut, Menu, X, Layers, Package, Pizza as PizzaIcon, Users, ShieldAlert } from 'lucide-react';
+import { Home, PieChart, ShoppingBag, Settings, LogOut, Menu, X, Layers, Package, Pizza as PizzaIcon, Users, ShieldAlert, Tag } from 'lucide-react';
 import AdminHeader from '../components/AdminHeader';
 
 const AdminLayout = ({ children, setSidebarOpen: externalSetSidebarOpen }) => {
@@ -26,6 +26,7 @@ const AdminLayout = ({ children, setSidebarOpen: externalSetSidebarOpen }) => {
         { name: 'Orders', href: '/admin/orders', icon: Package, roles: ['Super Admin', 'Manager'] },
         { name: 'Pizzas', href: '/admin/pizzas', icon: PizzaIcon, roles: ['Super Admin', 'Manager'] },
         { name: 'Toppings', href: '/admin/toppings', icon: Layers, roles: ['Super Admin', 'Manager'] },
+        { name: 'Coupons', href: '/admin/offers', icon: Tag, roles: ['Super Admin', 'Manager'] },
         { name: 'Customers', href: '/admin/customers', icon: Users, roles: ['Super Admin', 'Manager'] },
         { name: 'Analytics', href: '/admin/analytics', icon: PieChart, roles: ['Super Admin'] },
         { name: 'Admin Users', href: '/admin/admin-users', icon: ShieldAlert, roles: ['Super Admin'] },
@@ -40,8 +41,15 @@ const AdminLayout = ({ children, setSidebarOpen: externalSetSidebarOpen }) => {
     useEffect(() => {
         if (loading) return;
 
+        // Only redirect to login if NOT authenticated AND not already on login page
         if (!isAuthenticated && pathname !== '/admin/login') {
             router.push('/admin/login');
+            return;
+        }
+
+        // If authenticated and on login page, redirect to dashboard
+        if (isAuthenticated && pathname === '/admin/login') {
+            router.replace('/admin');
             return;
         }
 

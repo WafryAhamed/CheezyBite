@@ -50,25 +50,45 @@ export async function PUT(request) {
         }
 
         const body = await request.json();
-        const { name, phone, phone_verified } = body;
+        const { name, phone, phone_verified, address, addresses } = body;
 
-        // Validate phone if provided
+        // Validate phone if provided (Global User Phone)
         if (phone && !isValidPhone(phone)) {
-            return validationErrorResponse({ phone: 'Invalid phone number format' });
+            return validationErrorResponse({ phone: 'Invalid phone number format (Use 07XXXXXXXX)' });
+        }
+
+        if (address && address.trim().length < 10) {
+            return validationErrorResponse({ address: 'Address must be at least 10 characters' });
         }
 
         await dbConnect();
 
+        // Prepare update object
+        const updateData = {
+            ...(name && { name }),
+            ...(phone && { phone }),
+            ...(phone_verified !== undefined && { phone_verified }),
+            // Allow direct update of addresses array if provided
+            ...(addresses && Array.isArray(addresses) && { addresses })
+        };
+
+        // Handle single address string (Profile Input) -> pushes to addresses or updates default
+        // Only if 'addresses' array wasn't explicitly provided
+        if (address && !addresses) {
+            updateData.addresses = [{
+                id: `addr_${Date.now()}`,
+                label: 'Home',
+                street: address,
+                city: 'Colombo',
+                phone: phone || '07XXXXXXXX', // Placeholder if phone missing
+                isDefault: true
+            }];
+        }
+
         // Update user
         const user = await User.findByIdAndUpdate(
             authData.userId,
-            {
-                $set: {
-                    ...(name && { name }),
-                    ...(phone && { phone }),
-                    ...(phone_verified !== undefined && { phone_verified })
-                }
-            },
+            { $set: updateData },
             { new: true, runValidators: true }
         ).select('-password');
 
@@ -82,7 +102,9 @@ export async function PUT(request) {
             name: user.name,
             phone: user.phone,
             phone_verified: user.phone_verified,
-            addresses: user.addresses
+            addresses: user.addresses,
+            // Polyfill address for frontend convenience
+            address: user.addresses?.[0]?.address || ''
         }, 'Profile updated successfully');
 
     } catch (error) {

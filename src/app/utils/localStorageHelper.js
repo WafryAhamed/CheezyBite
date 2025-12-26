@@ -3,7 +3,7 @@
  * Handles SSR and data corruption gracefully
  */
 
-const CART_STORAGE_KEY = 'cheezybite_cart';
+const CART_STORAGE_KEY = 'cheezybite_guest_cart';
 
 /**
  * Check if we're in browser environment (not SSR)

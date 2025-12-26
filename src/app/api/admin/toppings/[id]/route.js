@@ -83,6 +83,10 @@ export async function PATCH(request, { params }) {
             return unauthorizedResponse();
         }
 
+        if (!isAdmin(authData)) {
+            return forbiddenResponse();
+        }
+
         const { id } = await params;
 
         await dbConnect();

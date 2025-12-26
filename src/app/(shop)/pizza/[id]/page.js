@@ -1,25 +1,46 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import { getPizzas } from '../../../utils/pizzaStore';
+// import { getPizzas } from '../../../utils/pizzaStore';
 import PizzaClient from './PizzaClient';
+import { headers } from 'next/headers';
+
+async function getData(id) {
+    try {
+        const headersList = await headers();
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+
+        const [pizzaRes, toppingsRes] = await Promise.all([
+            fetch(`${baseUrl}/pizzas/${id}`, { cache: 'no-store', headers: headersList }),
+            fetch(`${baseUrl}/toppings`, { cache: 'no-store', headers: headersList })
+        ]);
+
+        if (pizzaRes.status === 404) return null;
+        if (!pizzaRes.ok || !toppingsRes.ok) throw new Error('Failed to fetch data');
+
+        const pizzaData = await pizzaRes.json();
+        const toppingsData = await toppingsRes.json();
+
+        if (!pizzaData.success) return null;
+
+        const pizza = pizzaData.data;
+        const toppings = toppingsData.success ? toppingsData.data : [];
+        const activeToppings = toppings.filter(t => t.enabled);
+
+        // Inject toppings
+        return {
+            ...pizza,
+            toppings: activeToppings
+        };
+
+    } catch (error) {
+        console.error('Error fetching pizza data:', error);
+        return null;
+    }
+}
 
 export default async function PizzaPage({ params }) {
-    // In Next.js 15+, params is a Promise. We need to await it.
-    // However, if we assume 14 or older or standard behavior where it might be async in future context:
-    // Safer to treat params as potentially async or use it directly if guaranteed.
-    // Given the project setup, let's look at how it accessed it before: params.id directly.
-    // We'll trust Next.js will resolve it or it's an object. 
-    // BUT for safety in newer versions, we can just access it.
-
-    // NOTE: 'params' prop in App Router pages is an object in many versions, 
-    // but in latest Next.js 15 canary it's a promise. 
-    // I'll try to access it directly as likely it's Next 14/13. 
-    // Update: If it fails, we wrap in await `params`.
-
     const { id } = await params;
-
-    const allPizzas = getPizzas();
-    const pizza = allPizzas.find(p => p.id.toString() === id);
+    const pizza = await getData(id);
 
     if (!pizza) {
         notFound();

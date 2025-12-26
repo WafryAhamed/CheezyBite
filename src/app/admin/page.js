@@ -1,12 +1,47 @@
 "use client";
 
 import { useAdmin } from '../context/AdminContext';
+import { useSocket } from '../context/SocketContext';
+import { useEffect } from 'react';
+import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { ShoppingBag, TrendingUp, Package, DollarSign, Clock, CheckCircle, Pizza, Star } from 'lucide-react';
 import AdminCard from '../components/admin/AdminCard';
 
 export default function AdminDashboard() {
-    const { analytics, orders, pizzas, toppings, loading } = useAdmin();
+    const { analytics, orders, pizzas, toppings, loading, refreshOrders, refreshAnalytics, userRole } = useAdmin();
+    const { socket, subscribeToAdminDashboard } = useSocket();
+
+    // Subscribe to real-time updates
+    useEffect(() => {
+        subscribeToAdminDashboard();
+
+        if (socket) {
+            const handleNewOrder = (data) => {
+                toast.success(`New Order Received! (#${data.orderId})`, {
+                    icon: '🔔',
+                    duration: 5000
+                });
+                refreshOrders();
+                refreshAnalytics(); // Also refresh analytics
+            };
+
+            const handleOrderUpdate = () => {
+                refreshOrders();
+                refreshAnalytics(); // Also refresh analytics  
+            };
+
+            socket.on('order:created', handleNewOrder);
+            socket.on('order:updated', handleOrderUpdate); // Listen to actual event from API
+            socket.on('order:statusChanged', handleOrderUpdate);
+
+            return () => {
+                socket.off('order:created', handleNewOrder);
+                socket.off('order:updated', handleOrderUpdate);
+                socket.off('order:statusChanged', handleOrderUpdate);
+            };
+        }
+    }, [socket, subscribeToAdminDashboard, refreshOrders, refreshAnalytics]);
 
     if (loading || !analytics) {
         return (
@@ -67,7 +102,7 @@ export default function AdminDashboard() {
         );
     }
 
-    const recentOrders = orders.slice(0, 5);
+    const recentOrders = (orders || []).slice(0, 5);
     const stageNames = ['Placed', 'Preparing', 'Baking', 'Delivery', 'Delivered'];
     const stageColors = ['bg-blue-500', 'bg-yellow-500', 'bg-orange-500', 'bg-purple-500', 'bg-green-500'];
 
@@ -93,25 +128,25 @@ export default function AdminDashboard() {
                 <AdminCard
                     variant="blue"
                     title="Total Orders"
-                    value={analytics.totalOrders}
+                    value={analytics?.totalOrders || 0}
                     icon={ShoppingBag}
                 />
                 <AdminCard
                     variant="green"
                     title="Total Revenue"
-                    value={`Rs. ${analytics.totalRevenue.toLocaleString()}`}
+                    value={`Rs. ${(analytics?.totalRevenue || 0).toLocaleString()}`}
                     icon={DollarSign}
                 />
                 <AdminCard
                     variant="orange"
                     title="Active Pizzas"
-                    value={`${analytics.activePizzas} / ${analytics.totalPizzas}`}
+                    value={`${analytics?.activePizzas || 0} / ${analytics?.totalPizzas || 0}`}
                     icon={Pizza}
                 />
                 <AdminCard
                     variant="purple"
                     title="Avg Order Value"
-                    value={`Rs. ${analytics.avgOrderValue.toFixed(0)}`}
+                    value={`Rs. ${(analytics?.avgOrderValue || 0).toFixed(0)}`}
                     icon={TrendingUp}
                 />
             </div>
@@ -119,7 +154,7 @@ export default function AdminDashboard() {
             {/* Orders by Status */}
             <AdminCard variant="blue" title="Orders by Status" className="border-gray-700">
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mt-4">
-                    {Object.entries(analytics.ordersByStatus).map(([status, count], index) => (
+                    {Object.entries(analytics?.ordersByStatus || {}).map(([status, count], index) => (
                         <div key={status} className="text-center">
                             <div className={`w-12 h-12 ${stageColors[index]} rounded-full flex items-center justify-center mx-auto mb-2 shadow-lg shadow-black/20`}>
                                 <span className="text-white font-bold">{count}</span>
@@ -133,9 +168,9 @@ export default function AdminDashboard() {
             <div className="grid lg:grid-cols-2 gap-6">
                 {/* Popular Pizzas */}
                 <AdminCard variant="orange" title="Popular Pizzas" icon={Pizza}>
-                    {analytics.popularPizzas.length > 0 ? (
+                    {(analytics?.popularPizzas || []).length > 0 ? (
                         <div className="space-y-3 mt-4">
-                            {analytics.popularPizzas.map((pizza, index) => (
+                            {(analytics?.popularPizzas || []).map((pizza, index) => (
                                 <div key={pizza.name} className="flex items-center justify-between p-3 bg-black/20 rounded-lg border border-white/5 hover:bg-black/30 transition-colors">
                                     <div className="flex items-center gap-3">
                                         <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs text-white font-bold ${index === 0 ? 'bg-yellow-500' : 'bg-gray-700'}`}>
@@ -221,13 +256,15 @@ export default function AdminDashboard() {
                         <p className="text-gray-400 text-sm mt-1">Update prices & availability</p>
                     </AdminCard>
                 </Link>
-                <Link href="/admin/analytics" className="block">
-                    <AdminCard variant="purple" className="h-full hover:scale-[1.02] transition-transform cursor-pointer group">
-                        <TrendingUp className="w-8 h-8 text-purple-500 mb-3 group-hover:scale-110 transition-transform" />
-                        <h3 className="text-white font-semibold group-hover:text-purple-400 transition-colors">View Analytics</h3>
-                        <p className="text-gray-400 text-sm mt-1">Revenue & performance data</p>
-                    </AdminCard>
-                </Link>
+                {userRole !== 'Manager' && (
+                    <Link href="/admin/analytics" className="block">
+                        <AdminCard variant="purple" className="h-full hover:scale-[1.02] transition-transform cursor-pointer group">
+                            <TrendingUp className="w-8 h-8 text-purple-500 mb-3 group-hover:scale-110 transition-transform" />
+                            <h3 className="text-white font-semibold group-hover:text-purple-400 transition-colors">View Analytics</h3>
+                            <p className="text-gray-400 text-sm mt-1">Revenue & performance data</p>
+                        </AdminCard>
+                    </Link>
+                )}
             </div>
         </div>
     );

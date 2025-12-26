@@ -11,6 +11,15 @@ const SessionSchema = new mongoose.Schema({
         enum: ['User', 'Admin'],
         required: true
     },
+    role: {
+        type: String,
+        required: false
+    },
+    sessionId: {
+        type: String,
+        unique: true,
+        sparse: true
+    },
     token: {
         type: String,
         required: true,

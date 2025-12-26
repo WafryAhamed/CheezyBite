@@ -11,6 +11,7 @@ export default function PizzasPage() {
     const { pizzas, addPizza, updatePizza, togglePizzaEnabled, deletePizza, toppings } = useAdmin();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingPizza, setEditingPizza] = useState(null);
+
     const [formData, setFormData] = useState({
         name: '',
         description: '',
@@ -18,8 +19,10 @@ export default function PizzasPage() {
         priceSm: 1200,
         priceMd: 1600,
         priceLg: 2200,
+        category: 'Chicken', // Default
     });
 
+    const categories = ['Chicken', 'Cheese', 'Veg', 'Spicy', 'Special'];
     const availableImages = Array.from({ length: 25 }, (_, i) => `/pizzas/pizza${i + 1}.jpg`);
 
     const openAddModal = () => {
@@ -31,6 +34,7 @@ export default function PizzasPage() {
             priceSm: 1200,
             priceMd: 1600,
             priceLg: 2200,
+            category: 'Chicken',
         });
         setIsModalOpen(true);
     };
@@ -44,6 +48,7 @@ export default function PizzasPage() {
             priceSm: pizza.priceSm,
             priceMd: pizza.priceMd,
             priceLg: pizza.priceLg,
+            category: pizza.category || 'Chicken',
         });
         setIsModalOpen(true);
     };
@@ -66,17 +71,6 @@ export default function PizzasPage() {
                     <p className="text-gray-400">Manage your pizza menu</p>
                 </div>
                 <div className="flex gap-3">
-                    <button
-                        onClick={() => {
-                            if (confirm('This will reset all pizzas to the default 25 items from the user menu. Continue?')) {
-                                localStorage.removeItem('cheezybite_admin_pizzas');
-                                window.location.reload();
-                            }
-                        }}
-                        className="inline-flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors border border-gray-600"
-                    >
-                        Reset Data
-                    </button>
                     <button
                         onClick={openAddModal}
                         className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg transition-colors"
@@ -109,6 +103,9 @@ export default function PizzasPage() {
                             )}
                             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 pt-12">
                                 <h3 className="text-xl font-bold text-white capitalize shadow-black/50 drop-shadow-md">{pizza.name}</h3>
+                                <span className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded backdrop-blur-md border border-white/10">
+                                    {pizza.category}
+                                </span>
                             </div>
                         </div>
 
@@ -181,6 +178,19 @@ export default function PizzasPage() {
                                     className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
                                     required
                                 />
+                            </div>
+                            <div>
+                                <label className="block text-gray-400 text-sm mb-1">Category</label>
+                                <select
+                                    value={formData.category}
+                                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                                    required
+                                >
+                                    {categories.map(cat => (
+                                        <option key={cat} value={cat}>{cat}</option>
+                                    ))}
+                                </select>
                             </div>
                             <div>
                                 <label className="block text-gray-400 text-sm mb-1">Description</label>

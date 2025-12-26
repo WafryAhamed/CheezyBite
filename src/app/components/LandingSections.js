@@ -1,18 +1,19 @@
 'use client';
 
-import React from 'react';
+import React, { useContext } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Clock, ShieldCheck, Truck, Star, ArrowRight, Flame } from 'lucide-react';
 import PizzaGrid from './PizzaGrid'; // Re-use existing grid for Best Sellers logic if passed props, or handled internally
+import { CartContext } from '../context/CartContext';
 
 // 1. Highlights Strip
 export const Highlights = () => {
     const highlights = [
-        { icon: Clock, text: "30 Min Delivery", sub: "Or it's free" },
-        { icon: LeafIcon, text: "Fresh Ingredients", sub: "Locally sourced" }, // Using local LeafIcon helper or lucide
-        { icon: ShieldCheck, text: "Secure Payments", sub: "100% Safe" },
-        { icon: TrophyIcon, text: "Best Taste", sub: "Award winning" },
+        { icon: Clock, text: "Fast Delivery", highlight: "30-Min Delivery", sub: "Hot pizza delivered fast." },
+        { icon: LeafIcon, text: "Quality You Can Taste", highlight: "Fresh Ingredients", sub: "Prepared daily with care." },
+        { icon: ShieldCheck, text: "Pay With Confidence", highlight: "Secure Payments", sub: "Safe and trusted checkout." },
+        { icon: TrophyIcon, text: "Loved by Pizza Fans", highlight: "Customer Favourite", sub: "Trusted by thousands." },
     ];
 
     return (
@@ -26,7 +27,10 @@ export const Highlights = () => {
                             </div>
                             <div>
                                 <h3 className="font-bold text-ashWhite leading-tight">{item.text}</h3>
-                                <p className="text-xs text-ashWhite/60 uppercase tracking-wide">{item.sub}</p>
+                                <p className="text-xs uppercase tracking-wide mt-1">
+                                    <span className="text-red-500 font-bold block">{item.highlight}</span>
+                                    <span className="text-ashWhite block opacity-60 mt-0.5">{item.sub}</span>
+                                </p>
                             </div>
                         </div>
                     ))}
@@ -38,6 +42,8 @@ export const Highlights = () => {
 
 // 2. Best Sellers (Wrapper around PizzaGrid or custom carousel)
 export const BestSellers = ({ pizzas }) => {
+    const { addToCart } = useContext(CartContext);
+
     // Slice to max 4 items for best sellers
     const bestSellerPizzas = pizzas ? pizzas.slice(0, 4) : [];
 
@@ -54,7 +60,7 @@ export const BestSellers = ({ pizzas }) => {
                     </Link>
                 </div>
 
-                <PizzaGrid pizzas={bestSellerPizzas} />
+                <PizzaGrid pizzas={bestSellerPizzas} addToCart={addToCart} />
 
                 <div className="mt-12 text-center sm:hidden">
                     <Link href="/menu" className="btn btn-lg bg-softBlack border border-cardBorder text-white w-full flex justify-center">
@@ -68,6 +74,58 @@ export const BestSellers = ({ pizzas }) => {
 
 // 3. Offers Banner
 export const OffersBanner = () => {
+    const [featuredOffer, setFeaturedOffer] = React.useState(null);
+    const [loading, setLoading] = React.useState(true);
+
+    React.useEffect(() => {
+        fetchFeaturedOffer();
+    }, []);
+
+    const fetchFeaturedOffer = async () => {
+        try {
+            const response = await fetch('/api/offers', {
+                method: 'GET',
+                credentials: 'include'
+            });
+
+            const data = await response.json();
+
+            if (data.success && data.data && data.data.length > 0) {
+                // Get the first active offer as featured
+                setFeaturedOffer(data.data[0]);
+            }
+        } catch (error) {
+            console.error('Failed to fetch featured offer:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Don't show banner if no offers available
+    if (loading) {
+        return null; // Or a loading skeleton
+    }
+
+    if (!featuredOffer) {
+        return null; // Hide banner if no offers
+    }
+
+    const getDiscountText = () => {
+        if (featuredOffer.type === 'fixed') {
+            return `Get Rs. ${featuredOffer.value} OFF`;
+        } else {
+            const maxText = featuredOffer.maxDiscount ? ` (up to Rs. ${featuredOffer.maxDiscount})` : '';
+            return `Get ${featuredOffer.value}% OFF${maxText}`;
+        }
+    };
+
+    const getSubtext = () => {
+        if (featuredOffer.minOrderAmount > 0) {
+            return `On orders above Rs. ${featuredOffer.minOrderAmount}`;
+        }
+        return featuredOffer.description || 'On your next order';
+    };
+
     return (
         <section className="container mx-auto px-4 mb-20">
             <div className="bg-gradient-to-r from-primary to-secondary rounded-3xl p-8 lg:p-12 relative overflow-hidden shadow-2xl">
@@ -80,13 +138,13 @@ export const OffersBanner = () => {
                             Limited Time Offer
                         </span>
                         <h2 className="text-4xl lg:text-6xl font-bangers mb-4">
-                            Get 50% OFF
-                            <span className="block text-2xl lg:text-3xl font-robotoCondensed font-normal mt-2 opacity-90">On your second medium pizza</span>
+                            {getDiscountText()}
+                            <span className="block text-2xl lg:text-3xl font-robotoCondensed font-normal mt-2 opacity-90">{getSubtext()}</span>
                         </h2>
                         <div className="flex flex-col sm:flex-row items-center gap-4 mt-8">
                             <div className="bg-white/10 border border-white/20 border-dashed rounded-lg p-3 px-6 text-center">
                                 <span className="text-xs uppercase opacity-70 block mb-1">Use Code</span>
-                                <span className="text-2xl font-bold tracking-widest font-mono">CHEEZY50</span>
+                                <span className="text-2xl font-bold tracking-widest font-mono">{featuredOffer.code}</span>
                             </div>
                             <Link href="/menu" className="bg-white text-primary hover:bg-ashWhite px-8 py-3 rounded-full font-bold shadow-lg transition-transform transform hover:scale-105">
                                 Order Now

@@ -1,18 +1,19 @@
 'use client';
 
 import React, { useContext, useState } from 'react';
-import { CartContext } from '../context/CartContext';
-import { useUser } from '../context/UserContext';
-import CartItem from '../components/CartItem';
-import AuthModal from '../components/AuthModal';
+import { CartContext } from '../../context/CartContext';
+import { useUser } from '../../context/UserContext';
+import CartItem from '../../components/CartItem';
+import AuthModal from '../../components/AuthModal';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 export default function CartPage() {
     const { cart, cartTotal, isOpen, setIsOpen } = useContext(CartContext);
     const { isAuthenticated } = useUser();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [authModalOpen, setAuthModalOpen] = useState(false);
 
     // Coupon State
@@ -20,19 +21,35 @@ export default function CartPage() {
     const [discount, setDiscount] = useState(0);
     const [isApplied, setIsApplied] = useState(false);
 
-    const handleApplyCoupon = () => {
+    const handleApplyCoupon = async () => {
         if (!couponCode) return;
 
-        if (couponCode === 'CHEEZY50') {
-            // 50% off up to 800
-            const calculatedDiscount = Math.min(cartTotal * 0.5, 800);
-            setDiscount(calculatedDiscount);
-            setIsApplied(true);
-            toast.success('🔥 Coupon CHEEZY50 applied!');
-        } else {
-            toast.error('Invalid Coupon Code');
+        try {
+            const response = await fetch('/api/offers/apply', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ 
+                    code: couponCode, 
+                    cartTotal: cartTotal 
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success && data.data) {
+                setDiscount(data.data.discountAmount);
+                setIsApplied(true);
+                toast.success(`🔥 Coupon ${data.data.code} applied!`);
+            } else {
+                setDiscount(0);
+                setIsApplied(false);
+                toast.error(data.message || 'Invalid coupon code');
+            }
+        } catch (error) {
             setDiscount(0);
             setIsApplied(false);
+            toast.error('Failed to apply coupon. Please try again.');
         }
     };
 
@@ -45,7 +62,10 @@ export default function CartPage() {
 
     const handleCheckout = () => {
         if (isAuthenticated) {
-            router.push('/checkout');
+            // Preserve coupon param if present
+            const couponParam = searchParams?.get('coupon');
+            const checkoutUrl = couponParam ? `/checkout?coupon=${couponParam}` : '/checkout';
+            router.push(checkoutUrl);
         } else {
             setAuthModalOpen(true);
         }
@@ -186,7 +206,11 @@ export default function CartPage() {
             <AuthModal
                 isOpen={authModalOpen}
                 onClose={() => setAuthModalOpen(false)}
-                onSuccess={() => router.push('/checkout')}
+                onSuccess={() => {
+                    const couponParam = searchParams?.get('coupon');
+                    const checkoutUrl = couponParam ? `/checkout?coupon=${couponParam}` : '/checkout';
+                    router.push(checkoutUrl);
+                }}
             />
         </div>
     );

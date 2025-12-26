@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+  },
   images: {
     dangerouslyAllowSVG: true,
     remotePatterns: [
@@ -19,7 +21,11 @@ const nextConfig = {
       },
     ],
   },
-
+  // CRITICAL: Make JWT_SECRET available to Edge Runtime (middleware)
+  env: {
+    JWT_SECRET: process.env.JWT_SECRET,
+    JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN,
+  },
 };
 
 module.exports = nextConfig;

@@ -14,315 +14,231 @@ export const useUser = () => {
     return context;
 };
 
-const [user, setUser] = useState(null);
-const [loading, setLoading] = useState(true);
-const useBackend = process.env.NEXT_PUBLIC_USE_API_BACKEND === 'true';
+export const UserProvider = ({ children }) => {
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const useBackend = process.env.NEXT_PUBLIC_USE_API_BACKEND === 'true';
 
-// Import apiClient dynamically to avoid SSR issues if any, though it's safe
-// But better to use the imported singleton if we import it at top.
-// Let's add the import at the top first.
+    // Import apiClient dynamically to avoid SSR issues if any, though it's safe
+    // But better to use the imported singleton if we import it at top.
+    // Let's add the import at the top first.
 
-// Load user
-useEffect(() => {
-    const loadUser = async () => {
-        if (useBackend) {
+    // Load user (Backend Only)
+    useEffect(() => {
+        const loadUser = async () => {
             try {
-                // Check if we have a token (handled by axios interceptor or cookie)
+                // Check if we have a valid session via cookie
                 const response = await authService.getCurrentUser();
-                if (response.success) {
-                    setUser(response.data);
+                if (response.success && response.data.type === 'user') {
+                    // Polyfill address from first array item if present
+                    const userData = response.data;
+                    if (userData.addresses && userData.addresses.length > 0) {
+                        // Map 'street' from schema to 'address' for frontend
+                        userData.address = userData.addresses[0].street || userData.addresses[0].address;
+                    }
+                    setUser(userData);
                 } else {
-                    // Silent fail or logout if token invalid
-                    authService.logout();
+                    // Not authenticated or session expired
+                    setUser(null);
+                    // Legacy Cleanup: Remove old localStorage keys if they exist
+                    localStorage.removeItem('cheezybite_user');
+                    localStorage.removeItem('jwt_token');
                 }
             } catch (e) {
-                console.error("Failed to load user from API", e);
-            }
-        } else {
-            // Mock Mode: Load from localStorage
-            const storedUser = localStorage.getItem('cheezybite_user');
-            if (storedUser) {
-                try {
-                    setUser(JSON.parse(storedUser));
-                } catch (e) {
-                    console.error("Failed to parse user", e);
-                    localStorage.removeItem('cheezybite_user');
+                const isExpectedError = e?.response?.status === 401 ||
+                    e?.response?.status === 403 ||
+                    e?.response?.status === 404 ||
+                    e?.message?.includes('Invalid token') ||
+                    e?.status === 401 || // Check explicit status property if present
+                    e?.status === 403 ||
+                    e?.status === 404;
+
+                if (!isExpectedError) {
+                    console.error("Failed to load user from API", e);
                 }
+                setUser(null);
             }
+            setLoading(false);
+        };
+
+        loadUser();
+    }, []);
+
+    const login = async (email, password) => {
+        if (!email || !password) {
+            toast.error("Please fill in all fields");
+            return { success: false };
         }
-        setLoading(false);
-    };
 
-    loadUser();
-}, [useBackend]);
-
-const login = async (email, password) => {
-    if (!email || !password) {
-        toast.error("Please fill in all fields");
-        return false;
-    }
-
-    if (useBackend) {
         try {
             const response = await authService.login(email, password);
             if (response.success) {
                 setUser(response.data.user);
                 toast.success(`Welcome back!`);
-                return true;
+                return { success: true };
             }
         } catch (error) {
+            // Check for verification requirement
+            if (error?.response?.data?.data?.requireVerification || error?.message?.includes('verified') || error?.response?.status === 403) {
+                return { success: false, requireVerification: true };
+            }
             toast.error(error.message || "Login failed");
-            return false;
+            return { success: false, error: error.message };
         }
-    } else {
-        // Mock Login
-        const mockUser = {
-            id: 'u_' + Date.now(),
-            name: email.split('@')[0],
-            email: email,
-            phone: '+94 77 123 4567',
-            phone_verified: true
-        };
-        setUser(mockUser);
-        localStorage.setItem('cheezybite_user', JSON.stringify(mockUser));
-        toast.success(`Welcome back, ${mockUser.name}!`);
-        return true;
-    }
-};
+    };
 
-const register = async (name, email, password) => {
-    if (!name || !email || !password) {
-        toast.error("All fields are required");
-        return false;
-    }
+    const register = async (name, email, password) => {
+        if (!name || !email || !password) {
+            toast.error("All fields are required");
+            return { success: false };
+        }
 
-    if (useBackend) {
         try {
             const response = await authService.register(email, password, name);
             if (response.success) {
+                // Check if verification is required (it should be)
+                if (response.data.requireVerification) {
+                    return { success: true, requireVerification: true };
+                }
+
                 setUser(response.data.user);
                 toast.success(`Welcome to CheezyBite!`);
-                return true;
+                return { success: true };
             }
         } catch (error) {
             toast.error(error.message || "Registration failed");
-            return false;
+            return { success: false, error: error.message };
         }
-    } else {
-        // Mock Register
-        const newUser = {
-            id: 'u_' + Date.now(),
-            name,
-            email,
-            phone: '',
-            phone_verified: false,
-            photo: null
-        };
-        setUser(newUser);
-        localStorage.setItem('cheezybite_user', JSON.stringify(newUser));
-        toast.success(`Welcome to CheezyBite, ${name}!`);
-        return true;
-    }
-};
-
-const loginWithGoogle = async () => {
-    setLoading(true);
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    // Start with Mock for Google login even in backend mode for now
-    // Or implement a real Google Auth later.
-    // For now, keep it mock as requested ("mocked items to convert gradually")
-
-    const mockGoogleUser = {
-        id: 'g_' + Date.now(),
-        name: 'Demo User',
-        email: 'demo.user@gmail.com',
-        photo: 'https://ui-avatars.com/api/?name=Demo+User&background=random',
-        phone: '',
-        phone_verified: false,
-        provider: 'google'
     };
 
-    setUser(mockGoogleUser);
-    localStorage.setItem('cheezybite_user', JSON.stringify(mockGoogleUser));
-    toast.success(`Welcome back, ${mockGoogleUser.name}!`);
-    setLoading(false);
-    return true;
-};
+    const loginWithGoogle = async () => {
+        toast.error("Google Login not yet implemented in backend.");
+        return false;
+    };
 
-const logout = async () => {
-    if (useBackend) {
+    const logout = async () => {
         try {
             await authService.logout();
             setUser(null);
             toast.success("Logged out successfully");
+
+            // Redirect to home if needed, but state update handles UI
+            window.location.href = '/';
         } catch (e) {
             console.error("Logout error", e);
-            // Force client logout anyway
             setUser(null);
         }
-    } else {
-        setUser(null);
-        localStorage.removeItem('cheezybite_user');
-        toast.success("Logged out successfully");
-    }
-};
+    };
 
-const updateUser = async (updates) => {
-    if (!user) return;
+    const updateUser = async (updates) => {
+        if (!user) return;
 
-    if (useBackend) {
         try {
             // Filter updates to only allowed fields
             const allowedUpdates = {
                 name: updates.name,
                 phone: updates.phone,
-                phone_verified: updates.phone_verified
+                phone_verified: updates.phone_verified,
+                address: updates.address // Allow address update
             };
 
             const response = await authService.updateProfile(allowedUpdates);
             if (response.success) {
+                // Backend now returns compatible object, merge it
                 setUser(prev => ({ ...prev, ...response.data }));
-                toast.success("Profile updated");
+                toast.success("Profile updated successfully!");
+            } else {
+                // Handle API error response
+                const errorMessage = response.message || response.error || "Failed to update profile";
+                toast.error(errorMessage);
             }
         } catch (error) {
-            toast.error("Failed to update profile");
+            console.error("Update profile error:", error);
+            
+            // Better error handling
+            let errorMessage = "Failed to update profile";
+            
+            if (error.response?.status === 400) {
+                errorMessage = error.response?.data?.message || "Please check your information";
+            } else if (error.response?.status === 401) {
+                errorMessage = "Session expired. Please log in again.";
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            toast.error(errorMessage);
         }
-    } else {
-        const updatedUser = { ...user, ...updates };
-        setUser(updatedUser);
-        localStorage.setItem('cheezybite_user', JSON.stringify(updatedUser));
-    }
-};
+    };
 
-const addAddress = async (address) => {
-    if (!user) return;
+    const addAddress = async (address) => {
+        if (!user) return;
+        const newAddr = {
+            id: `addr_${Date.now()}`,
+            ...address,
+            isDefault: user.addresses?.length === 0 // Make default if first address
+        };
 
-    if (useBackend) {
+        const updatedAddresses = [...(user.addresses || []), newAddr];
+
         try {
-            const response = await apiClient.post('/users/addresses', address);
+            const response = await authService.updateProfile({ addresses: updatedAddresses });
             if (response.success) {
-                // Refresh user to get updated addresses
-                const userResponse = await authService.getCurrentUser();
-                if (userResponse.success) {
-                    setUser(userResponse.data);
-                    toast.success("Address added successfully");
-                }
+                setUser(prev => ({ ...prev, ...response.data }));
+                toast.success("Address added successfully");
             }
-        } catch (error) {
+        } catch (e) {
             toast.error("Failed to add address");
         }
-    } else {
-        const newAddress = { ...address, id: 'addr_' + Date.now() };
-        const currentAddresses = user.addresses || [];
-        if (currentAddresses.length === 0) newAddress.isDefault = true;
-        const updatedAddresses = [...currentAddresses, newAddress];
+    };
 
-        // Re-use mock updateUser logic inline or call function?
-        // Calling local function handles state update
-        const updatedUser = { ...user, addresses: updatedAddresses };
-        setUser(updatedUser);
-        localStorage.setItem('cheezybite_user', JSON.stringify(updatedUser));
-        toast.success("Address added successfully");
-    }
-};
+    const removeAddress = async (addressId) => {
+        if (!user) return;
+        const updatedAddresses = user.addresses.filter(a => a.id !== addressId);
 
-const removeAddress = async (addressId) => {
-    if (!user) return;
-
-    if (useBackend) {
         try {
-            const response = await apiClient.delete(`/users/addresses/${addressId}`);
+            const response = await authService.updateProfile({ addresses: updatedAddresses });
             if (response.success) {
-                // Optimistic update
-                setUser(prev => ({
-                    ...prev,
-                    addresses: prev.addresses.filter(a => a.id !== addressId)
-                }));
+                setUser(prev => ({ ...prev, ...response.data }));
                 toast.success("Address removed");
             }
-        } catch (error) {
+        } catch (e) {
             toast.error("Failed to remove address");
         }
-    } else {
-        const updatedAddresses = (user.addresses || []).filter(a => a.id !== addressId);
-        const updatedUser = { ...user, addresses: updatedAddresses };
-        setUser(updatedUser);
-        localStorage.setItem('cheezybite_user', JSON.stringify(updatedUser));
-        toast.success("Address removed");
-    }
-};
+    };
 
-const setAddressAsDefault = async (addressId) => {
-    if (!user) return;
-
-    if (useBackend) {
-        try {
-            const response = await apiClient.put(`/users/addresses/${addressId}`, { isDefault: true });
-            if (response.success) {
-                // Update local state to reflect change
-                setUser(prev => ({
-                    ...prev,
-                    addresses: prev.addresses.map(a => ({
-                        ...a,
-                        isDefault: a.id === addressId
-                    }))
-                }));
-                toast.success("Default address updated");
-            }
-        } catch (error) {
-            toast.error("Failed to update address");
-        }
-    } else {
-        const updatedAddresses = (user.addresses || []).map(a => ({
+    const setAddressAsDefault = async (addressId) => {
+        if (!user) return;
+        const updatedAddresses = user.addresses.map(a => ({
             ...a,
             isDefault: a.id === addressId
         }));
-        const updatedUser = { ...user, addresses: updatedAddresses };
-        setUser(updatedUser);
-        localStorage.setItem('cheezybite_user', JSON.stringify(updatedUser));
-        toast.success("Default address updated");
-    }
-};
 
-const verifyPhone = async () => {
-    if (!user) return;
-
-    if (useBackend) {
         try {
-            const response = await authService.updateProfile({ phone_verified: true });
+            const response = await authService.updateProfile({ addresses: updatedAddresses });
             if (response.success) {
-                setUser(prev => ({ ...prev, phone_verified: true }));
-                toast.success("Phone number verified successfully!");
+                setUser(prev => ({ ...prev, ...response.data }));
+                toast.success("Default address updated");
             }
-        } catch (error) {
-            toast.error("Verification failed");
+        } catch (e) {
+            toast.error("Failed to update preference");
         }
-    } else {
-        const updatedUser = { ...user, phone_verified: true };
-        setUser(updatedUser);
-        localStorage.setItem('cheezybite_user', JSON.stringify(updatedUser));
-        toast.success("Phone number verified successfully!");
-    }
-};
+    };
 
-return (
-    <UserContext.Provider value={{
-        user,
-        loading,
-        login,
-        loginWithGoogle,
-        register,
-        logout,
-        updateUser,
-        addAddress,
-        removeAddress,
-        setAddressAsDefault,
-        verifyPhone,
-        isAuthenticated: !!user
-    }}>
-        {children}
-    </UserContext.Provider>
-);
+    return (
+        <UserContext.Provider value={{
+            user,
+            loading,
+            login,
+            register,
+            loginWithGoogle,
+            logout,
+            updateUser,
+            addAddress,
+            removeAddress,
+            setAddressAsDefault,
+            isAuthenticated: !!user
+        }}>
+            {children}
+        </UserContext.Provider>
+    );
 };

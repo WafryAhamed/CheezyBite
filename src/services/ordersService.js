@@ -24,6 +24,6 @@ export const ordersService = {
     },
 
     updateStatus: async (id, stage) => {
-        return await api.patch(`/admin/orders/${id}/status`, { statusIndex: stage });
+        return await api.patch(`/admin/orders/${id}/status`, { currentStage: stage });
     }
 };

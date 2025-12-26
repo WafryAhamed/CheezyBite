@@ -24,7 +24,7 @@ export function isValidPassword(password) {
  */
 export function isValidPhone(phone) {
     if (!phone) return false;
-    const phoneRegex = /^(\+94|0)?[0-9]{9,10}$/;
+    const phoneRegex = /^07[0-9]{8}$/;
     return phoneRegex.test(phone.replace(/\s/g, ''));
 }
 

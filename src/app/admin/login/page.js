@@ -7,7 +7,7 @@ import { Pizza, Lock, User } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminLoginPage() {
-    const { login, isAuthenticated } = useAdmin();
+    const { login, isAuthenticated, loading } = useAdmin();
     const router = useRouter();
 
     // Form state
@@ -15,28 +15,54 @@ export default function AdminLoginPage() {
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    // Redirect if already logged in
-    useEffect(() => {
-        if (isAuthenticated) {
-            router.push('/admin');
-        }
-    }, [isAuthenticated, router]);
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
 
-        // Helper returns boolean success
-        const success = await login(username, password);
-
-        if (success) {
-            // Redirect happens in useEffect
-        } else {
+        try {
+            // Username trimmed for safety, Password kept raw (case sensitive)
+            const success = await login(username.trim(), password);
+            if (success) {
+                // Redirect handled by useEffect or Context
+            } else {
+                setIsLoading(false);
+            }
+        } catch (error) {
+            console.error('Login error:', error);
             setIsLoading(false);
         }
     };
 
-    if (isAuthenticated) return null; // Prevent flash
+    // Redirect if already logged in using replace to avoid history issues
+    useEffect(() => {
+        if (!loading && isAuthenticated) {
+            router.replace('/admin');
+        }
+    }, [isAuthenticated, loading, router]);
+
+    // Global loading state (checking auth)
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-jetBlack flex items-center justify-center">
+                <div className="text-center">
+                    <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-primary border-r-transparent"></div>
+                    <p className="mt-4 text-ashWhite">Checking session...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // If authenticated, we are redirecting. Don't show form.
+    // We can show a spinner or nothing.
+    if (isAuthenticated) {
+        return (
+            <div className="min-h-screen bg-jetBlack flex items-center justify-center">
+                <div className="text-center">
+                    <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-primary border-r-transparent"></div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-jetBlack flex items-center justify-center p-4">

@@ -9,8 +9,8 @@ import GlobalEditModal from '../components/GlobalEditModal';
 
 export default function ShopLayout({ children }) {
     return (
-        <CartProvider>
-            <UserProvider>
+        <UserProvider>
+            <CartProvider>
                 <OrderProvider>
                     <ClientCleanup />
                     <GlobalEditModal />
@@ -19,7 +19,7 @@ export default function ShopLayout({ children }) {
                     <SmartCart />
                     <Footer />
                 </OrderProvider>
-            </UserProvider>
-        </CartProvider>
+            </CartProvider>
+        </UserProvider>
     );
 }

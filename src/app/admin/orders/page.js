@@ -3,10 +3,25 @@
 import { useAdmin } from '../../context/AdminContext';
 import { useState, useEffect } from 'react';
 import { RefreshCw, ChevronDown, ChevronUp, Clock, CheckCircle } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { formatDateTime, formatRelativeTime } from '@/utils/dateFormatter';
 
 export default function OrdersPage() {
     const { orders, updateOrderStatus, refreshOrders } = useAdmin();
+    const searchParams = useSearchParams();
+    const query = searchParams.get('q')?.toLowerCase() || '';
     const [expandedOrder, setExpandedOrder] = useState(null);
+
+    // Filter orders
+    const filteredOrders = orders.filter(order => {
+        if (!query) return true;
+        const id = order.id.toString().toLowerCase();
+        const total = order.total?.toString();
+        // Check items
+        const hasItem = order.items?.some(item => item.name.toLowerCase().includes(query));
+
+        return id.includes(query) || total.includes(query) || hasItem;
+    });
 
     const stageNames = ['Order Placed', 'Preparing', 'Baking', 'Out for Delivery', 'Delivered'];
     const stageEmojis = ['✅', '👨‍🍳', '🔥', '🚴', '🎉'];
@@ -17,11 +32,6 @@ export default function OrdersPage() {
         const interval = setInterval(refreshOrders, 30000);
         return () => clearInterval(interval);
     }, [refreshOrders]);
-
-    const formatDate = (timestamp) => {
-        if (!timestamp) return 'N/A';
-        return new Date(timestamp).toLocaleString();
-    };
 
     const getStageColor = (stage) => {
         if (stage === -1) return 'bg-red-500';
@@ -54,13 +64,13 @@ export default function OrdersPage() {
                 </button>
             </div>
 
-            {orders.length === 0 ? (
+            {filteredOrders.length === 0 ? (
                 <div className="bg-gray-800 rounded-xl border border-gray-700 p-12 text-center">
-                    <p className="text-gray-400">No orders yet. Orders will appear here when customers place them.</p>
+                    <p className="text-gray-400">No matching orders found.</p>
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {orders.slice().reverse().map((order) => (
+                    {/* API already returns orders sorted newest first (createdAt: -1) */}\n                    {filteredOrders.map((order) => (
                         <div
                             key={order.id}
                             className={`bg-gray-800 rounded-xl border overflow-hidden ${order.currentStage === -1 ? 'border-red-500/30' : 'border-gray-700'}`}
@@ -76,7 +86,16 @@ export default function OrdersPage() {
                                     </div>
                                     <div>
                                         <p className="text-white font-semibold">Order #{order.id.toString().slice(-6)}</p>
-                                        <p className="text-gray-400 text-sm">{formatDate(order.createdAt || order.timestamp)}</p>
+                                        <div className="space-y-0.5 mt-1">
+                                            <p className="text-gray-400 text-xs flex items-center gap-1">
+                                                <Clock className="w-3 h-3" />
+                                                <span className="text-gray-500">Placed:</span> {formatDateTime(order.createdAt)}
+                                            </p>
+                                            <p className="text-gray-400 text-xs flex items-center gap-1">
+                                                <Clock className="w-3 h-3" />
+                                                <span className="text-gray-500">Updated:</span> {formatRelativeTime(order.updatedAt)}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-4">

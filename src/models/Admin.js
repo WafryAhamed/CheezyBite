@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const AdminSchema = new mongoose.Schema({
     id: {
@@ -44,9 +44,8 @@ const AdminSchema = new mongoose.Schema({
 });
 
 // Update timestamp on save
-AdminSchema.pre('save', function (next) {
+AdminSchema.pre('save', function () {
     this.updatedAt = Date.now();
-    next();
 });
 
-export default mongoose.models.Admin || mongoose.model('Admin', AdminSchema);
+module.exports = mongoose.models.Admin || mongoose.model('Admin', AdminSchema);

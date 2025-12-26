@@ -2,113 +2,144 @@
 
 import React, { createContext, useState, useEffect, useCallback } from 'react';
 import {
-    loadActiveOrder,
-    saveActiveOrder,
-    updateOrderStatus,
-    updateOrderStage,
-    clearActiveOrder,
-    saveToOrderHistory,
-    createOrder as createOrderUtil
+    saveGuestOrderId,
+    getGuestOrderId,
+    clearGuestOrderId,
+    createOrder as createOrderUtil // Deprecated but kept for reference if needed
 } from '../utils/orderManager';
+import { ordersService } from '@/services/ordersService';
+import { authService } from '@/services/authService';
 import toast from 'react-hot-toast';
+
+import { STAGE_MESSAGES, ORDER_STAGES } from '../utils/orderConstants';
 
 export const OrderContext = createContext();
 
-const ORDER_STAGE_DURATION = 15000; // 15 seconds per stage
-
-const STAGE_MESSAGES = [
-    { name: 'Order Placed', emoji: '✅', message: 'Order confirmed!' },
-    { name: 'Preparing', emoji: '👨‍🍳', message: 'Chef is preparing your pizza...' },
-    { name: 'Baking', emoji: '🔥', message: 'Pizza is baking in the oven!' },
-    { name: 'Out for Delivery', emoji: '🚴', message: 'Your pizza is on the way!' },
-    { name: 'Delivered', emoji: '🎉', message: 'Delivered! Enjoy your meal!' }
-];
+const POLLING_INTERVAL = 10000; // Poll every 10s if socket fails
 
 export const OrderProvider = ({ children }) => {
     const [activeOrder, setActiveOrder] = useState(null);
     const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
-    const useBackend = process.env.NEXT_PUBLIC_USE_API_BACKEND === 'true';
+    const [loading, setLoading] = useState(true);
 
     // Load active order on mount
     useEffect(() => {
         const loadOrder = async () => {
-            if (useBackend) {
-                // Check if we have an active order in DB? 
-                // Maybe fetch latest active order from API
-                try {
-                    const { ordersService } = await import('@/services/ordersService');
-                    // Need an endpoint to get active order. 
-                    // GET /api/orders returns all. We can filter for active.
+            setLoading(true);
+            try {
+                // Check if user is authenticated
+                const authCheck = await authService.getCurrentUser();
+
+                if (authCheck.success) {
+                    // Authenticated User: Get latest active order
                     const response = await ordersService.getMyOrders();
                     if (response.success && response.data.length > 0) {
-                        // Find most recent active order
-                        const active = response.data.find(o => o.currentStage < 4 && o.status !== 'Cancelled');
-                        if (active) {
-                            setActiveOrder(active);
-                            // Don't auto-open modal on reload, user might be doing something else
+                        const active = response.data.find(o => o.currentStage < ORDER_STAGES.DELIVERED && o.status !== 'Cancelled');
+                        if (active) setActiveOrder(active);
+                    }
+                } else {
+                    // Guest User: Check for locally stored Order ID
+                    const guestOrderId = getGuestOrderId();
+                    if (guestOrderId) {
+                        const response = await ordersService.getById(guestOrderId);
+                        if (response.success && response.data) {
+                            const order = response.data;
+                            if (order.currentStage < ORDER_STAGES.DELIVERED && order.status !== 'Cancelled') {
+                                setActiveOrder(order);
+                            } else {
+                                // Order delivered or cancelled, clear local ID
+                                clearGuestOrderId();
+                            }
+                        } else {
+                            // Invalid ID or not found
+                            clearGuestOrderId();
                         }
                     }
-                } catch (e) {
+                }
+            } catch (e) {
+                // Squelch 401/403/404 errors (expected if not logged in or no active order)
+                const isExpectedError = e?.response?.status === 401 ||
+                    e?.response?.status === 403 ||
+                    e?.response?.status === 404 ||
+                    e?.status === 401 ||
+                    e?.status === 403 ||
+                    e?.status === 404 ||
+                    e?.message?.includes('Invalid token');
+
+                if (!isExpectedError) {
                     console.error("Failed to load active order", e);
                 }
-            } else {
-                const savedOrder = loadActiveOrder();
-                if (savedOrder) {
-                    setActiveOrder(savedOrder);
-                    // setIsOrderModalOpen(true); // Don't force open on reload
-                }
+            } finally {
+                setLoading(false);
             }
         };
         loadOrder();
-    }, [useBackend]);
+    }, []);
 
-    // Socket.IO / Polling for Updates
+    // Socket.IO Integration
     useEffect(() => {
-        if (!activeOrder || !useBackend || activeOrder.currentStage >= 4 || activeOrder.status === 'Cancelled') return;
+        if (!activeOrder || activeOrder.currentStage >= ORDER_STAGES.DELIVERED || activeOrder.status === 'Cancelled') return;
 
         let socket = null;
 
         const connectSocket = async () => {
             try {
-                // Dynamic import socket.io-client
                 const { io } = await import('socket.io-client');
                 const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:4000';
-                socket = io(socketUrl);
+
+                socket = io(socketUrl, {
+                    reconnectionAttempts: 5,
+                    timeout: 5000
+                });
 
                 socket.on('connect', () => {
-                    console.log('Socket connected');
-                    // Join user room
-                    // Need user ID. stored in activeOrder.userId
+                    // console.log('Socket connected');
                     if (activeOrder.userId) {
                         socket.emit('join_user_room', activeOrder.userId);
                     }
+                    // Also join specific order room just in case
+                    socket.emit('order:track', { orderId: activeOrder.id });
                 });
 
-                socket.on('order_updated', (updatedOrder) => {
-                    if (updatedOrder.id === activeOrder.id) {
-                        setActiveOrder(updatedOrder);
+                socket.on('order:update', (data) => {
+                    if (data.orderId === activeOrder.id) {
+                        // MERGE update, don't replace
+                        setActiveOrder(prev => ({
+                            ...prev,
+                            status: data.status,
+                            currentStage: data.currentStage,
+                            ...(data.currentStage === ORDER_STAGES.DELIVERED ? {
+                                actualDeliveryTime: data.timestamp
+                            } : {})
+                        }));
 
-                        // Show toast for stage change
-                        const stageInfo = STAGE_MESSAGES[updatedOrder.currentStage];
-                        if (stageInfo && updatedOrder.currentStage > activeOrder.currentStage) {
+                        const stageInfo = STAGE_MESSAGES[data.currentStage];
+                        if (stageInfo && data.currentStage > activeOrder.currentStage) {
                             toast.success(`${stageInfo.emoji} ${stageInfo.message}`, {
                                 duration: 4000,
                                 position: 'top-center',
                             });
                         }
 
-                        if (updatedOrder.currentStage === 4) {
-                            // Delivered
+                        if (data.currentStage === ORDER_STAGES.DELIVERED) {
                             setTimeout(() => {
-                                clearActiveOrder(); // Clear local backup
+                                clearGuestOrderId();
                                 setActiveOrder(null);
                                 setIsOrderModalOpen(false);
                             }, 5000);
                         }
                     }
                 });
+
+                socket.on('connect_error', () => {
+                    // Socket server not available - polling fallback will handle it
+                });
+
+                socket.on('error', () => {
+                    // Silent error handling
+                });
             } catch (e) {
-                console.error("Socket error", e);
+                // Socket connection failed - polling fallback will handle it
             }
         };
 
@@ -117,94 +148,94 @@ export const OrderProvider = ({ children }) => {
         return () => {
             if (socket) socket.disconnect();
         };
-    }, [activeOrder, useBackend]);
+    }, [activeOrder]);
 
-    // Auto-advance order stages (MOCK MODE ONLY)
+    // Polling Fallback (Resilience)
     useEffect(() => {
-        if (useBackend) return; // Disable mock simulation if using backend
+        if (!activeOrder || activeOrder.currentStage >= ORDER_STAGES.DELIVERED || activeOrder.status === 'Cancelled') return;
 
-        if (!activeOrder || activeOrder.currentStage >= 4) return;
+        const pollInterval = setInterval(async () => {
+            try {
+                const response = await ordersService.getById(activeOrder.id);
+                if (response.success) {
+                    const remoteOrder = response.data;
+                    // Only update if state changed to avoid re-renders
+                    if (remoteOrder.currentStage !== activeOrder.currentStage || remoteOrder.status !== activeOrder.status) {
+                        setActiveOrder(remoteOrder);
 
-        const timer = setTimeout(() => {
-            const newStage = activeOrder.currentStage + 1;
-            const stageInfo = STAGE_MESSAGES[newStage];
+                        // Trigger toast if stage advanced
+                        if (remoteOrder.currentStage > activeOrder.currentStage) {
+                            const stageInfo = STAGE_MESSAGES[remoteOrder.currentStage];
+                            if (stageInfo) {
+                                toast.success(`${stageInfo.emoji} ${stageInfo.message}`);
+                            }
+                        }
 
-            const updatedOrder = updateOrderStage(
-                activeOrder,
-                newStage,
-                stageInfo.message
-            );
-
-            setActiveOrder(updatedOrder);
-
-            // Show toast notification
-            toast.success(`${stageInfo.emoji} ${stageInfo.message}`, {
-                duration: 4000,
-                position: 'top-center',
-            });
-
-            // If delivered, save to history and clear active order
-            if (newStage === 4) {
-                setTimeout(() => {
-                    saveToOrderHistory(updatedOrder);
-                    clearActiveOrder();
-                    setActiveOrder(null);
-                    setIsOrderModalOpen(false);
-                }, 5000);
+                        if (remoteOrder.currentStage === ORDER_STAGES.DELIVERED) {
+                            setTimeout(() => {
+                                clearGuestOrderId();
+                                setActiveOrder(null);
+                                setIsOrderModalOpen(false);
+                            }, 5000);
+                        }
+                    }
+                }
+            } catch (e) {
+                // Polling failed, silent ignore
             }
-        }, ORDER_STAGE_DURATION);
+        }, POLLING_INTERVAL);
 
-        return () => clearTimeout(timer);
-    }, [activeOrder, useBackend]);
+        return () => clearInterval(pollInterval);
+    }, [activeOrder]);
 
     // Create new order
     const createOrder = useCallback(async (cart, cartTotal, orderDetails, onSuccess) => {
-        if (useBackend) {
-            try {
-                const { ordersService } = await import('@/services/ordersService');
-                // Construct API payload
-                const orderPayload = {
-                    items: cart,
-                    total: cartTotal,
-                    deliveryAddress: orderDetails.deliveryDetails, // Ensure structure matches
-                    paymentMethod: orderDetails.paymentMethod
-                };
+        try {
+            // Construct API payload
+            const orderPayload = {
+                items: cart,
+                total: cartTotal,
+                address: orderDetails.address || orderDetails.deliveryDetails,
+                paymentMethod: orderDetails.paymentMethod,
+                deliveryTime: orderDetails.deliveryTime,
+                deliveryInstructions: orderDetails.deliveryInstructions,
+                paymentDetails: orderDetails.paymentDetails,
+                appliedOffer: orderDetails.appliedOffer,
+                discountAmount: orderDetails.discountAmount
+            };
 
-                const response = await ordersService.create(orderPayload);
-                if (response.success) {
-                    const order = response.data.order;
-                    setActiveOrder(order);
-                    setIsOrderModalOpen(true);
+            const response = await ordersService.create(orderPayload);
+            if (response.success && response.data) {
+                // API returns the order directly in response.data (not wrapped in { order: ... })
+                const order = response.data._id ? response.data : response.data.order;
 
-                    toast.success('🎉 Order placed successfully! (Backend)', {
-                        duration: 3000,
-                        position: 'top-center',
-                    });
-
-                    if (onSuccess) onSuccess(order);
-                    return order;
+                // If the created order has no user ID, save it locally for guest tracking
+                if (!order.userId) {
+                    saveGuestOrderId(order._id || order.id);
                 }
-            } catch (error) {
-                toast.error(error.message || "Failed to place order");
+
+                setActiveOrder(order);
+                setIsOrderModalOpen(true);
+
+                toast.success('🎉 Order placed successfully!', {
+                    duration: 3000,
+                    position: 'top-center',
+                });
+
+                if (onSuccess) onSuccess(order);
+                return order;
+            } else {
+                toast.error(response.message || "Failed to place order");
                 return null;
             }
-        } else {
-            const order = createOrderUtil(cart, cartTotal, orderDetails);
-            saveActiveOrder(order);
-            setActiveOrder(order);
-            setIsOrderModalOpen(true);
-
-            toast.success('🎉 Order placed successfully!', {
-                duration: 3000,
-                position: 'top-center',
-            });
-
-            if (onSuccess) onSuccess(order);
-            return order;
+        } catch (error) {
+            console.error("Create Order Error:", error);
+            toast.error(error.message || "Failed to place order");
+            return null;
         }
-    }, [useBackend]);
+    }, []);
 
-    // Cancel order (Strict Logic)
+    // Cancel order
     const cancelOrder = useCallback(async () => {
         if (!activeOrder) return;
 
@@ -217,30 +248,18 @@ export const OrderProvider = ({ children }) => {
             return;
         }
 
-        if (useBackend) {
-            try {
-                const { ordersService } = await import('@/services/ordersService');
-                const response = await ordersService.cancel(activeOrder.id);
-                if (response.success) {
-                    setActiveOrder(null);
-                    setIsOrderModalOpen(false);
-                    toast.error('Order cancelled successfully');
-                }
-            } catch (e) {
-                toast.error("Failed to cancel order");
+        try {
+            const response = await ordersService.cancel(activeOrder.id);
+            if (response.success) {
+                setActiveOrder(null);
+                clearGuestOrderId();
+                setIsOrderModalOpen(false);
+                toast.error('Order cancelled successfully');
             }
-        } else {
-            const cancelledOrder = { ...activeOrder, status: 'Cancelled', stage: -1 };
-            saveToOrderHistory(cancelledOrder);
-            clearActiveOrder();
-            setActiveOrder(null);
-            setIsOrderModalOpen(false);
-
-            toast.error('Order cancelled successfully', {
-                duration: 3000,
-            });
+        } catch (e) {
+            toast.error("Failed to cancel order");
         }
-    }, [activeOrder, useBackend]);
+    }, [activeOrder]);
 
     const value = {
         activeOrder,
@@ -248,7 +267,8 @@ export const OrderProvider = ({ children }) => {
         setIsOrderModalOpen,
         createOrder,
         cancelOrder,
-        stageMessages: STAGE_MESSAGES
+        stageMessages: STAGE_MESSAGES,
+        loading
     };
 
     return (

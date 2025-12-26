@@ -1,5 +1,6 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
+// Schema definition for Orders
 const OrderSchema = new mongoose.Schema({
     id: {
         type: String,
@@ -9,10 +10,7 @@ const OrderSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: function () {
-            // Required unless it's a guest order (future feature)
-            return this.customerEmail ? false : true;
-        }
+        required: false
     },
     // For guest checkouts (future)
     customerEmail: {
@@ -164,6 +162,20 @@ const OrderSchema = new mongoose.Schema({
         default: '',
         trim: true
     },
+    appliedOffer: {
+        code: String,
+        type: {
+            type: String,
+            enum: ['fixed', 'percent']
+        },
+        value: Number,
+        discountAmount: Number
+    },
+    discountAmount: {
+        type: Number,
+        default: 0,
+        min: [0, 'Discount cannot be negative']
+    },
     createdAt: {
         type: Date,
         default: Date.now
@@ -177,7 +189,7 @@ const OrderSchema = new mongoose.Schema({
 });
 
 // Update timestamp on save
-OrderSchema.pre('save', function (next) {
+OrderSchema.pre('save', function () {
     this.updatedAt = Date.now();
 
     // Auto-update status based on currentStage
@@ -202,14 +214,11 @@ OrderSchema.pre('save', function (next) {
             }
         }
     }
-
-    next();
 });
 
 // Indexes for faster queries
 OrderSchema.index({ userId: 1, createdAt: -1 });
-OrderSchema.index({ id: 1 });
 OrderSchema.index({ status: 1, createdAt: -1 });
 OrderSchema.index({ currentStage: 1 });
 
-export default mongoose.models.Order || mongoose.model('Order', OrderSchema);
+module.exports = mongoose.models.Order || mongoose.model('Order', OrderSchema);

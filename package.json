@@ -8,18 +8,22 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "server": "node server/index.js",
-    "seed": "node scripts/seedDatabase.js",
+    "seed": "node scripts/seed.mjs",
     "dev:all": "concurrently \"npm run dev\" \"npm run server\"",
     "db:reset": "node scripts/resetDatabase.js"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",
     "@next/bundle-analyzer": "^16.0.10",
+    "axios": "^1.13.2",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
+    "dotenv": "^16.4.5",
     "eslint": "8.37.0",
     "eslint-config-next": "13.2.4",
     "express": "^5.2.1",
@@ -35,6 +39,7 @@
     "react-modal": "^3.16.1",
     "react-parallax-mouse": "^2.0.1",
     "recharts": "^3.5.1",
+    "resend": "^6.6.0",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "tailwind-merge": "^3.4.0",
@@ -42,9 +47,14 @@
     "zustand": "^5.0.9"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "autoprefixer": "^10.4.14",
     "concurrently": "^9.2.1",
     "husky": "^9.1.7",
+    "jest": "^30.2.0",
+    "jest-environment-jsdom": "^30.2.0",
     "postcss": "^8.4.21",
     "tailwindcss": "^3.3.1"
   }

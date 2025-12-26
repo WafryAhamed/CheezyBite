@@ -1,18 +1,45 @@
 "use client";
 
 import { useAdmin } from '../context/AdminContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
     Pizza, Search, Bell, ChevronDown, LogOut,
     LayoutDashboard, ShoppingBag, Users, Settings, Menu
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function AdminHeader({ onMenuToggle }) {
     const { logout, userRole, currentUser } = useAdmin();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const pathname = usePathname();
+    const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+    // Sync input with URL param if it changes externally
+    useEffect(() => {
+        setSearchTerm(searchParams.get('q') || '');
+    }, [searchParams]);
+
+    const handleSearch = (e) => {
+        const value = e.target.value;
+        setSearchTerm(value);
+
+        // Debounce URL update
+        const timeoutId = setTimeout(() => {
+            const params = new URLSearchParams(searchParams);
+            if (value) {
+                params.set('q', value);
+            } else {
+                params.delete('q');
+            }
+            router.replace(`${pathname}?${params.toString()}`);
+        }, 300);
+
+        return () => clearTimeout(timeoutId);
+    };
 
     const handleLogout = () => {
         logout();
@@ -34,12 +61,11 @@ export default function AdminHeader({ onMenuToggle }) {
                 </button>
 
                 <Link href="/admin" className="flex items-center gap-2 group">
-                    <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                        <Pizza className="w-5 h-5 text-primary" />
+                    <div className="w-28 h-9 relative">
+                        <Image src="/logo.svg" fill alt="CheezyBite" className="object-contain" />
                     </div>
                     <div>
-                        <div className="font-bold text-ashWhite leading-tight">CHEEZYBITE</div>
-                        <div className="text-[10px] text-ashWhite/50 uppercase tracking-wider font-semibold">Admin Panel</div>
+                        <div className="text-[10px] text-ashWhite/50 uppercase tracking-wider font-semibold border-l border-white/10 pl-2 ml-1">Admin Panel</div>
                     </div>
                 </Link>
             </div>
@@ -52,6 +78,8 @@ export default function AdminHeader({ onMenuToggle }) {
                     <input
                         type="text"
                         placeholder="Search orders, products, customers..."
+                        value={searchTerm}
+                        onChange={handleSearch}
                         className="w-full bg-jetBlack border border-cardBorder rounded-lg pl-10 pr-4 py-2 text-sm text-ashWhite placeholder-ashWhite/30 focus:outline-none focus:border-primary/50 transition-all"
                     />
                 </div>

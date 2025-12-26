@@ -5,6 +5,7 @@
 
 import dbConnect from '@/lib/dbConnect';
 import User from '@/models/User';
+import OtpSession from '@/models/OtpSession';
 import { hashPassword, generateToken } from '@/lib/auth';
 import { validateUserRegistration } from '@/lib/validators';
 import { successResponse, errorResponse, validationErrorResponse, serverErrorResponse } from '@/lib/apiResponse';
@@ -33,34 +34,24 @@ export async function POST(request) {
         // Hash password
         const hashedPassword = await hashPassword(password);
 
-        // Create user
+        // Create user (Unverified initially)
         const user = await User.create({
             email: email.toLowerCase(),
             password: hashedPassword,
             name,
             phone: phone || '',
+            emailVerified: false,
             addresses: []
         });
 
-        // Generate JWT token
-        const token = generateToken({
-            userId: user._id,
-            email: user.email,
-            type: 'user'
-        });
-
-        // Return user data (without password)
-        const userData = {
-            id: user._id,
-            email: user.email,
-            name: user.name,
-            phone: user.phone,
-            addresses: user.addresses
-        };
-
+        // We do NOT return a token. We require verification.
         return successResponse(
-            { user: userData, token },
-            'Registration successful',
+            {
+                userId: user._id,
+                email: user.email,
+                requireVerification: true
+            },
+            'Account created. Please verify your email.',
             201
         );
 

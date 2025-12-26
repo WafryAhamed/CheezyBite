@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const ToppingSchema = new mongoose.Schema({
     id: {
@@ -39,13 +39,12 @@ const ToppingSchema = new mongoose.Schema({
 });
 
 // Update timestamp on save
-ToppingSchema.pre('save', function (next) {
+ToppingSchema.pre('save', function () {
     this.updatedAt = Date.now();
-    next();
 });
 
 // Index for faster queries
 ToppingSchema.index({ enabled: 1 });
-ToppingSchema.index({ id: 1 });
 
-export default mongoose.models.Topping || mongoose.model('Topping', ToppingSchema);
+
+module.exports = mongoose.models.Topping || mongoose.model('Topping', ToppingSchema);

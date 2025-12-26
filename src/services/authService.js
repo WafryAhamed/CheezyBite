@@ -9,23 +9,12 @@ export const authService = {
     // Login
     login: async (email, password) => {
         const response = await api.post('/auth/login', { email, password });
-        // Optional: Save token if returned in body (fallback for non-cookie clients)
-        if (response.success && response.data.token) {
-            if (typeof window !== 'undefined') {
-                localStorage.setItem('jwt_token', response.data.token);
-            }
-        }
         return response;
     },
 
     // Admin Login
     adminLogin: async (username, password) => {
         const response = await api.post('/admin/auth/login', { username, password });
-        if (response.success && response.data.token) {
-            if (typeof window !== 'undefined') {
-                localStorage.setItem('jwt_token', response.data.token);
-            }
-        }
         return response;
     },
 
@@ -36,10 +25,7 @@ export const authService = {
         } catch (e) {
             // Ignore error on logout
         }
-        if (typeof window !== 'undefined') {
-            localStorage.removeItem('jwt_token');
-            localStorage.removeItem('cheezybite_user'); // Clear legacy mock
-        }
+        // No client-side cleanup needed for httpOnly cookies
         return { success: true };
     },
 
@@ -48,8 +34,32 @@ export const authService = {
         return await api.get('/auth/me');
     },
 
+    // Request OTP
+    requestOtp: async (email, purpose) => {
+        const response = await api.post('/auth/otp/request', { email, purpose });
+        return response;
+    },
+
+    // Verify OTP
+    verifyOtp: async (email, purpose, code) => {
+        const response = await api.post('/auth/otp/verify', { email, purpose, code });
+        return response;
+    },
+
     // Update Profile
     updateProfile: async (updates) => {
         return await api.put('/users/me', updates);
+    },
+
+    // Forgot Password
+    forgotPassword: async (email) => {
+        const response = await api.post('/auth/password/forgot', { email });
+        return response;
+    },
+
+    // Reset Password
+    resetPassword: async (email, token, newPassword) => {
+        const response = await api.post('/auth/password/reset', { email, token, newPassword });
+        return response;
     }
 };

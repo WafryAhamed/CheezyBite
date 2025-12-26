@@ -3,15 +3,18 @@
  * Ensures fresh state for the application by versioning the local storage.
  */
 
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0'; // Bumped for Migration
 const APP_VERSION_KEY = 'cheezybite_app_version';
 
 const KEYS_TO_CLEAR = [
-    'cheezybite_cart',
+    'cheezybite_cart',           // Renamed to cheezybite_guest_cart
+    'cheezybite_user',           // Migrated to Backend (Cookie)
+    'jwt_token',                 // Migrated to Cookie
     'cheezybite_admin_pizzas',
     'cheezybite_admin_toppings',
     'cheezybite_orders',
     'cheezybite_admin_auth',
+    'cheezybite_admin_users',
     'cheezybite_active_order',
     'cheezybite_order_history'
 ];

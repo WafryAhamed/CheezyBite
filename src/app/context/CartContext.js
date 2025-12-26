@@ -29,85 +29,127 @@ const CartProvider = ({ children }) => {
 
     const useBackend = process.env.NEXT_PUBLIC_USE_API_BACKEND === 'true';
 
-    // Load cart from localStorage on mount
+    // Load initial cart
     useEffect(() => {
-        const storedCart = loadCart();
-        if (storedCart.length > 0) {
-            // Migration: Ensure all items have cartLineId
-            const migratedCart = storedCart.map(item => {
-                if (!item.cartLineId) {
-                    const hash = generateOptionsHash(item.id, item.size, item.crust, item.additionalTopping);
-                    return { ...item, cartLineId: `${hash}-${Date.now()}`, optionsHash: hash };
-                }
-                return item;
-            });
-            setCart(migratedCart);
-        }
-    }, []);
+        const initializeCart = async () => {
+            // 1. Always load guest cart potential first to show something or prepare for merge
+            const guestCart = loadCart();
 
-    // HYBRID CART STRATEGY: Sync with Backend
-    useEffect(() => {
-        const syncCart = async () => {
-            if (useBackend && user) {
+            if (user) {
+                // LOGGED IN: Fetch from Backend
+                // If we have guest items, we might need to merge them first (handled in the user effect below)
+                // But for initial mount happening *with* user already present (page refresh):
                 try {
                     const { cartService } = await import('@/services/cartService');
-
-                    // On User Login (user became available), merge local cart to DB
-                    // The API `/api/cart` (POST) handles merge if we send current items
-                    // We need to distinguish between "Initial Load/Merge" and "Update"
-                    // Simple strategy: Always push current state to server? 
-                    // No, that overwrites server state if we start with empty local cart.
-
-                    // improved strategy:
-                    // 1. If we have local items, push them to merge.
-                    // 2. Fetch latest cart from server to sync state.
-
-                    if (cart.length > 0) {
-                        // Merge local items to server
-                        await cartService.syncCart(cart, true);
-                    }
-
-                    // Fetch unified cart from server
                     const response = await cartService.getCart();
                     if (response.success) {
                         setCart(response.data.items);
-                        // Clear local storage to avoid confusion? 
-                        // Or keep it as cache? Let's keep it to be safe for offline, 
-                        // but `saveCart` below handles that.
                     }
-                } catch (error) {
-                    console.error("Cart sync failed", error);
+                } catch (e) {
+                    // Squelch 401/403/404 and Invalid Token errors (expected if session expired)
+                    const isExpectedError = e?.response?.status === 401 ||
+                        e?.response?.status === 403 ||
+                        e?.response?.status === 404 ||
+                        e?.message?.includes('Invalid token') ||
+                        e?.status === 401 ||
+                        e?.status === 403 ||
+                        e?.status === 404;
+
+                    if (!isExpectedError) {
+                        console.error("Failed to load user cart", e);
+                    }
+                }
+            } else {
+                // GUEST: Use localStorage
+                if (guestCart.length > 0) {
+                    const migratedCart = guestCart.map(item => {
+                        if (!item.cartLineId) {
+                            const hash = generateOptionsHash(item.id, item.size, item.crust, item.additionalTopping);
+                            return { ...item, cartLineId: `${hash}-${Date.now()}`, optionsHash: hash };
+                        }
+                        return item;
+                    });
+                    setCart(migratedCart);
                 }
             }
         };
 
-        // Only run this when user changes (logs in)
+        initializeCart();
+    }, [user]); // Re-run if user status changes (Login/Logout)
+
+    // SYNC Logic: Handle transition Guest -> Logged In
+    useEffect(() => {
+        const mergeGuestCart = async () => {
+            if (user && useBackend) {
+                const guestCart = loadCart();
+
+                if (guestCart.length > 0) {
+                    try {
+                        const { cartService } = await import('@/services/cartService');
+                        // Merge guest items to server
+                        await cartService.syncCart(guestCart, true);
+
+                        // Clear guest storage after successful merge
+                        clearStoredCart();
+
+                        // Fetch updated server cart
+                        const response = await cartService.getCart();
+                        if (response.success) {
+                            setCart(response.data.items);
+                            toast.success("Cart synced with your account!");
+                        }
+                    } catch (e) {
+                        const isExpectedError = e?.status === 401 || e?.status === 403 || e?.response?.status === 401 || e?.response?.status === 403;
+                        if (!isExpectedError) {
+                            console.error("Merge failed", e?.message || e);
+                            if (e?.data) {
+                                console.error("Error details:", e.data);
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
         if (user) {
-            syncCart();
+            mergeGuestCart();
         }
     }, [user, useBackend]);
 
-    // Persist cart to localStorage whenever it changes
-    // AND sync to backend if logged in
+    // PERSISTENCE Logic
     useEffect(() => {
-        if (cart.length >= 0) {
-            saveCart(cart);
-
-            // Sync to backend if logged in (Debounce this in real app, but ok for now)
-            if (useBackend && user && cart.length > 0) {
-                // Use a small timeout to avoid blocking or rapid calls
-                const timer = setTimeout(async () => {
+        // Debounce sync for backend
+        const timeoutId = setTimeout(async () => {
+            if (user && useBackend) {
+                if (cart.length >= 0) {
+                    // Logged In: Sync to Backend (Overwrite/Update)
                     try {
                         const { cartService } = await import('@/services/cartService');
-                        // merge=false means overwrite with current state
                         await cartService.syncCart(cart, false);
                     } catch (e) {
-                        console.error("Background cart sync failed", e);
+                        // Suppress expected errors: 401/403 (auth), 404 (not found)
+                        const isExpectedError =
+                            e?.status === 401 ||
+                            e?.status === 403 ||
+                            e?.status === 404 ||
+                            e?.response?.status === 401 ||
+                            e?.response?.status === 403 ||
+                            e?.response?.status === 404 ||
+                            e?.message?.includes('Invalid token') ||
+                            e?.message?.includes('Authentication required');
+
+                        if (!isExpectedError) {
+                            console.error("Cart save failed", e?.message || e);
+                        }
                     }
-                }, 500);
-                return () => clearTimeout(timer);
+                }
+            } else {
+                // Guest: Save to LocalStorage
+                saveCart(cart);
             }
-        }
+        }, 500);
+
+        return () => clearTimeout(timeoutId);
     }, [cart, user, useBackend]);
 
     // Enable cross-tab sync (Only for Guest mode mostly, but keeps tabs in sync)

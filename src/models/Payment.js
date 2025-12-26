@@ -37,6 +37,14 @@ const PaymentSchema = new mongoose.Schema({
     transactionId: {
         type: String
     },
+    providerPaymentId: {
+        type: String
+    },
+    method: {
+        type: String,
+        enum: ['card', 'upi', 'wallet', 'cash', 'cod'],
+        default: 'card'
+    },
     metadata: {
         type: Map,
         of: String

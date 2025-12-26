@@ -1,12 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { X, Lock, RefreshCw, CheckCircle, ArrowRight } from 'lucide-react';
+import { X, Lock, RefreshCw, CheckCircle, ArrowRight, Mail } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { authService } from '../../services/authService';
 
-const OTPModal = ({ isOpen, onClose, onVerify, phoneNumber }) => {
+const OTPModal = ({ isOpen, onClose, onVerify, email, purpose = 'checkout' }) => {
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
-    const [timer, setTimer] = useState(30);
+    const [timer, setTimer] = useState(60);
     const [isVerifying, setIsVerifying] = useState(false);
     const [canResend, setCanResend] = useState(false);
+    const [hasSent, setHasSent] = useState(false);
+    const [isRequestInFlight, setIsRequestInFlight] = useState(false);
+
+    // Initial Request - only once per open
+    useEffect(() => {
+        if (isOpen && !hasSent && email && !isRequestInFlight) {
+            requestOtp();
+        }
+    }, [isOpen, email, hasSent, isRequestInFlight]);
 
     useEffect(() => {
         let interval;
@@ -19,6 +29,24 @@ const OTPModal = ({ isOpen, onClose, onVerify, phoneNumber }) => {
         }
         return () => clearInterval(interval);
     }, [isOpen, timer]);
+
+    const requestOtp = async () => {
+        if (isRequestInFlight) return; // Guard against duplicate requests
+        
+        try {
+            setIsRequestInFlight(true);
+            await authService.requestOtp(email, purpose);
+            setHasSent(true);
+            setTimer(60);
+            setCanResend(false);
+            // toast.success("Verification code sent to email");
+        } catch (error) {
+            console.error("Failed to send OTP", error);
+            // toast.error("Failed to send verification code");
+        } finally {
+            setIsRequestInFlight(false);
+        }
+    };
 
     const handleChange = (element, index) => {
         if (isNaN(element.value)) return false;
@@ -43,10 +71,9 @@ const OTPModal = ({ isOpen, onClose, onVerify, phoneNumber }) => {
     };
 
     const handleResend = () => {
-        setTimer(30);
-        setCanResend(false);
+        requestOtp();
         setOtp(['', '', '', '', '', '']);
-        toast.success("OTP Sent again!");
+        toast.success("Code sent again!");
     };
 
     const handleSubmit = async () => {
@@ -57,16 +84,18 @@ const OTPModal = ({ isOpen, onClose, onVerify, phoneNumber }) => {
         }
 
         setIsVerifying(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setIsVerifying(false);
-
-        // Mock verification: '123456' is always valid for demo
-        if (code === '123456' || code === '000000') {
-            onVerify();
-        } else {
-            toast.error("Invalid OTP. Try 123456");
+        try {
+            const response = await authService.verifyOtp(email, purpose, code);
+            if (response.success) {
+                toast.success("Verified successfully!");
+                onVerify();
+                onClose();
+            }
+        } catch (error) {
+            toast.error(error.message || "Invalid code. Please try again.");
             setOtp(['', '', '', '', '', '']);
+        } finally {
+            setIsVerifying(false);
         }
     };
 
@@ -84,12 +113,12 @@ const OTPModal = ({ isOpen, onClose, onVerify, phoneNumber }) => {
 
                 <div className="text-center mb-8">
                     <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-primary/20">
-                        <Lock className="w-8 h-8 text-primary" />
+                        <Mail className="w-8 h-8 text-primary" />
                     </div>
-                    <h2 className="text-2xl font-bold text-ashWhite mb-2">Verify Phone Number</h2>
+                    <h2 className="text-2xl font-bold text-ashWhite mb-2">Verify Your Email</h2>
                     <p className="text-ashWhite/60 text-sm">
                         Please enter the 6-digit code sent to <br />
-                        <span className="font-bold text-ashWhite mt-1 inline-block">{phoneNumber}</span>
+                        <span className="font-bold text-ashWhite mt-1 inline-block">{email}</span>
                     </p>
                 </div>
 
@@ -104,7 +133,6 @@ const OTPModal = ({ isOpen, onClose, onVerify, phoneNumber }) => {
                             onChange={e => handleChange(e.target, index)}
                             onKeyDown={e => {
                                 if (e.key === 'Backspace' && !otp[index] && index > 0) {
-                                    // Focus previous if empty
                                     e.target.previousSibling.focus();
                                 }
                             }}
@@ -116,14 +144,14 @@ const OTPModal = ({ isOpen, onClose, onVerify, phoneNumber }) => {
                     onClick={handleSubmit}
                     disabled={isVerifying || otp.join('').length !== 6}
                     className={`nav-btn w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 mb-4 ${isVerifying || otp.join('').length !== 6
-                            ? 'bg-softBlack text-ashWhite/40 border-transparent cursor-not-allowed'
-                            : 'bg-primary text-white border-primary hover:shadow-lg hover:shadow-primary/20'
+                        ? 'bg-softBlack text-ashWhite/40 border-transparent cursor-not-allowed'
+                        : 'bg-primary text-white border-primary hover:shadow-lg hover:shadow-primary/20'
                         }`}
                 >
                     {isVerifying ? (
                         <>Verifying...</>
                     ) : (
-                        <>Verify & Process Order <ArrowRight className="w-4 h-4" /></>
+                        <>Verify & Continue <ArrowRight className="w-4 h-4" /></>
                     )}
                 </button>
 

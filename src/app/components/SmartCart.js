@@ -194,7 +194,7 @@ const SmartCart = () => {
                             </div>
 
                             {/* Scrollable List */}
-                            <div ref={itemsRef} className="overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-primary scrollbar-track-transparent" style={{ maxHeight: 'calc(85vh - 250px)' }}>
+                            <div ref={itemsRef} className="overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-primary scrollbar-track-transparent" style={{ maxHeight: 'calc(85vh - 300px)' }}>
                                 {cart.length > 0 ? (
                                     <div className="flex flex-col gap-4">
                                         {cart.map((item, idx) => (
@@ -222,6 +222,10 @@ const SmartCart = () => {
                                         <div className="flex justify-between text-ashWhite/60 text-sm">
                                             <span>Subtotal</span>
                                             <span>Rs. {cartTotal.toLocaleString()}</span>
+                                        </div>
+                                        <div className="flex justify-between text-ashWhite/60 text-sm">
+                                            <span>Delivery Fee</span>
+                                            <span>Rs. 350</span>
                                         </div>
                                         <div className="flex justify-between text-white font-bold text-lg">
                                             <span>Total</span>

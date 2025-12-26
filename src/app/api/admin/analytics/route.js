@@ -13,12 +13,21 @@ import { successResponse, serverErrorResponse } from '@/lib/apiResponse';
 export async function GET(request) {
     try {
         // Authenticate admin
-        const authData = await authenticate(request);
+        let authData;
+        try {
+            authData = await authenticate(request);
+        } catch (authError) {
+            console.error('❌ Admin Analytics: Authentication error:', authError);
+            return unauthorizedResponse('Authentication failed');
+        }
+        
         if (!authData || authData.type !== 'admin') {
+            console.log('❌ Admin Analytics: Invalid auth data:', { authData });
             return unauthorizedResponse();
         }
 
         if (!isAdmin(authData)) {
+            console.log('❌ Admin Analytics: Not admin role:', authData.role);
             return forbiddenResponse();
         }
 
@@ -101,35 +110,64 @@ export async function GET(request) {
             { $sort: { _id: 1 } }
         ]);
 
+        // Format daily revenue for last 7 days (fill missing days with 0)
+        const dailyRevenue = [];
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            const dateStr = date.toISOString().split('T')[0];
+            const dayData = revenueByDay.find(d => d._id === dateStr);
+            
+            dailyRevenue.push({
+                day: dayNames[date.getDay()],
+                date: dateStr,
+                revenue: dayData?.revenue || 0,
+                orders: dayData?.orders || 0
+            });
+        }
+
         // Calculate average order value
-        const avgOrderValue = totalRevenue[0]?.total
+        const avgOrderValue = totalRevenue[0]?.total && totalOrders > 0
             ? Math.round(totalRevenue[0].total / totalOrders)
             : 0;
 
-        // Response
+        // Get active pizzas count
+        const totalPizzas = await Pizza.countDocuments();
+        const activePizzas = await Pizza.countDocuments({ enabled: true });
+
+        // Format response to match frontend expectations
         const analytics = {
-            overview: {
-                totalOrders,
-                totalRevenue: totalRevenue[0]?.total || 0,
-                totalUsers,
-                activeOrders,
-                avgOrderValue
-            },
+            // Direct metrics
+            totalOrders,
+            totalRevenue: totalRevenue[0]?.total || 0,
+            totalUsers,
+            activeOrders,
+            avgOrderValue,
+            totalPizzas,
+            activePizzas,
+
+            // Charts data
+            dailyRevenue,
+            
+            popularPizzas: topPizzas.slice(0, 5).map(pizza => ({
+                name: pizza._id,
+                count: pizza.count,
+                revenue: Math.round(pizza.revenue)
+            })),
+
+            // Additional data
             ordersByStatus: ordersByStatus.reduce((acc, item) => {
                 acc[item._id] = item.count;
                 return acc;
             }, {}),
-            topPizzas: topPizzas.map(pizza => ({
-                name: pizza._id,
-                orders: pizza.count,
-                revenue: Math.round(pizza.revenue)
-            })),
-            revenueByDay: revenueByDay.map(day => ({
-                date: day._id,
-                revenue: day.revenue,
-                orders: day.orders
-            })),
-            recentOrders
+
+            recentOrders: recentOrders.map(order => ({
+                id: order.id,
+                total: order.total,
+                status: order.status,
+                createdAt: order.createdAt
+            }))
         };
 
         return successResponse(analytics, 'Analytics fetched successfully');

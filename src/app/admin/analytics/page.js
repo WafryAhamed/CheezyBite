@@ -11,12 +11,12 @@ export default function AnalyticsPage() {
     }
 
     // Calculate additional metrics
-    const completedOrders = orders.filter(o => o.currentStage === 4).length;
-    const completionRate = orders.length > 0 ? ((completedOrders / orders.length) * 100).toFixed(1) : 0;
+    const completedOrders = (orders || []).filter(o => o.currentStage === 4).length;
+    const completionRate = (orders || []).length > 0 ? ((completedOrders / (orders || []).length) * 100).toFixed(1) : 0;
 
     // Size preferences
     const sizeCounts = { small: 0, medium: 0, large: 0 };
-    orders.forEach(order => {
+    (orders || []).forEach(order => {
         (order.items || []).forEach(item => {
             if (item.size === 'small') sizeCounts.small += item.amount;
             else if (item.size === 'medium') sizeCounts.medium += item.amount;
@@ -41,7 +41,7 @@ export default function AnalyticsPage() {
                         </div>
                         <span className="text-gray-400">Total Orders</span>
                     </div>
-                    <p className="text-3xl font-bold text-white">{analytics.totalOrders}</p>
+                    <p className="text-3xl font-bold text-white">{analytics?.totalOrders || 0}</p>
                     <p className="text-sm text-gray-400 mt-1">{completedOrders} completed</p>
                 </div>
 
@@ -52,8 +52,8 @@ export default function AnalyticsPage() {
                         </div>
                         <span className="text-gray-400">Total Revenue</span>
                     </div>
-                    <p className="text-3xl font-bold text-white">Rs. {analytics.totalRevenue.toFixed(2)}</p>
-                    <p className="text-sm text-gray-400 mt-1">Avg: Rs. {analytics.avgOrderValue.toFixed(2)}/order</p>
+                    <p className="text-3xl font-bold text-white">Rs. {(analytics?.totalRevenue || 0).toFixed(2)}</p>
+                    <p className="text-sm text-gray-400 mt-1">Avg: Rs. {(analytics?.avgOrderValue || 0).toFixed(2)}/order</p>
                 </div>
 
                 <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/10 rounded-xl p-6 border border-purple-500/20">
@@ -74,8 +74,8 @@ export default function AnalyticsPage() {
                         </div>
                         <span className="text-gray-400">Active Menu</span>
                     </div>
-                    <p className="text-3xl font-bold text-white">{analytics.activePizzas}</p>
-                    <p className="text-sm text-gray-400 mt-1">of {analytics.totalPizzas} pizzas</p>
+                    <p className="text-3xl font-bold text-white">{analytics?.activePizzas || 0}</p>
+                    <p className="text-sm text-gray-400 mt-1">of {analytics?.totalPizzas || 0} pizzas</p>
                 </div>
             </div>
 
@@ -84,8 +84,8 @@ export default function AnalyticsPage() {
                 <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
                     <h2 className="text-lg font-semibold text-white mb-4">Daily Revenue (Last 7 Days)</h2>
                     <div className="space-y-3">
-                        {analytics.dailyRevenue.map((day, index) => {
-                            const maxRevenue = Math.max(...analytics.dailyRevenue.map(d => d.revenue), 1);
+                        {(analytics?.dailyRevenue || []).map((day, index) => {
+                            const maxRevenue = Math.max(...(analytics?.dailyRevenue || []).map(d => d.revenue), 1);
                             const width = (day.revenue / maxRevenue) * 100;
                             return (
                                 <div key={index} className="flex items-center gap-4">
@@ -96,7 +96,7 @@ export default function AnalyticsPage() {
                                             style={{ width: `${Math.max(width, 5)}%` }}
                                         >
                                             {width > 20 && (
-                                                <span className="text-xs text-white font-medium">Rs. {day.revenue.toFixed(0)}</span>
+                                                <span className="text-xs text-white font-medium">Rs. {(day.revenue || 0).toFixed(0)}</span>
                                             )}
                                         </div>
                                     </div>
@@ -110,10 +110,10 @@ export default function AnalyticsPage() {
                 {/* Popular Pizzas */}
                 <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
                     <h2 className="text-lg font-semibold text-white mb-4">Top Selling Pizzas</h2>
-                    {analytics.popularPizzas.length > 0 ? (
+                    {(analytics?.popularPizzas || []).length > 0 ? (
                         <div className="space-y-3">
-                            {analytics.popularPizzas.map((pizza, index) => {
-                                const maxCount = Math.max(...analytics.popularPizzas.map(p => p.count), 1);
+                            {(analytics?.popularPizzas || []).map((pizza, index) => {
+                                const maxCount = Math.max(...(analytics?.popularPizzas || []).map(p => p.count), 1);
                                 const width = (pizza.count / maxCount) * 100;
                                 const colors = ['from-yellow-500 to-yellow-600', 'from-gray-400 to-gray-500', 'from-orange-600 to-orange-700', 'from-gray-500 to-gray-600', 'from-gray-500 to-gray-600'];
                                 return (
@@ -185,7 +185,7 @@ export default function AnalyticsPage() {
                 <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
                     <h2 className="text-lg font-semibold text-white mb-4">Order Status Distribution</h2>
                     <div className="grid grid-cols-5 gap-2">
-                        {Object.entries(analytics.ordersByStatus).map(([status, count], index) => {
+                        {Object.entries(analytics?.ordersByStatus || {}).map(([status, count], index) => {
                             const colors = ['bg-blue-500', 'bg-yellow-500', 'bg-orange-500', 'bg-purple-500', 'bg-green-500'];
                             const emojis = ['✅', '👨‍🍳', '🔥', '🚴', '🎉'];
                             return (

@@ -17,8 +17,10 @@ export async function GET(request) {
     try {
         // Authenticate user
         const authData = await authenticate(request);
+        
+        // Admin users: treat as guest (no cart in DB)
         if (!authData || authData.type !== 'user') {
-            return unauthorizedResponse();
+            return successResponse({ items: [] }, 'Cart is empty');
         }
 
         await dbConnect();
@@ -48,12 +50,21 @@ export async function POST(request) {
     try {
         // Authenticate user
         const authData = await authenticate(request);
+        
+        // Admin users or guests: accept but don't save to DB
         if (!authData || authData.type !== 'user') {
-            return unauthorizedResponse();
+            const body = await request.json();
+            const { items = [] } = body;
+            return successResponse({ items }, 'Cart accepted (not persisted for admin/guest)');
         }
 
         const body = await request.json();
-        const { items, merge = true } = body;
+        const { items = [], merge = true } = body;
+
+        // Validate items array
+        if (!Array.isArray(items)) {
+            return serverErrorResponse(new Error('Items must be an array'));
+        }
 
         await dbConnect();
 
@@ -73,13 +84,17 @@ export async function POST(request) {
 
                 // Add new items from localStorage
                 items.forEach(newItem => {
+                    if (!newItem || !newItem.cartLineId) {
+                        return; // Skip invalid items
+                    }
+
                     const existingIndex = mergedItems.findIndex(
-                        item => item.cartLineId === newItem.cartLineId
+                        item => item && item.cartLineId === newItem.cartLineId
                     );
 
                     if (existingIndex >= 0) {
                         // Update quantity if same item
-                        mergedItems[existingIndex].amount += newItem.amount;
+                        mergedItems[existingIndex].amount += (newItem.amount || 0);
                     } else {
                         // Add new item
                         mergedItems.push(newItem);
@@ -101,6 +116,7 @@ export async function POST(request) {
         );
 
     } catch (error) {
+        console.error('Cart POST Error:', error);
         return serverErrorResponse(error);
     }
 }
@@ -112,8 +128,10 @@ export async function DELETE(request) {
     try {
         // Authenticate user
         const authData = await authenticate(request);
+        
+        // Admin users or guests: return success without DB operation
         if (!authData || authData.type !== 'user') {
-            return unauthorizedResponse();
+            return successResponse(null, 'Cart cleared successfully');
         }
 
         await dbConnect();

@@ -11,25 +11,31 @@ import { successResponse, notFoundResponse, errorResponse, serverErrorResponse }
 
 export async function GET(request, { params }) {
     try {
-        // Authenticate user
+        // Authenticate user (optional for guest orders)
         const authData = await authenticate(request);
-        if (!authData || authData.type !== 'user') {
-            return unauthorizedResponse();
-        }
 
         const { id } = await params;
 
         await dbConnect();
 
-        // Get order
-        const order = await Order.findOne({
-            id: id,
-            userId: authData.userId
-        }).select('-__v');
+        // Get order first to check ownership
+        const order = await Order.findOne({ id: id }).select('-__v');
 
         if (!order) {
             return notFoundResponse('Order');
         }
+
+        // Access Control
+        if (order.userId) {
+            // If order belongs to a user, requester MUST be that user (or Admin)
+            if (!authData || (authData.type !== 'user' && authData.type !== 'admin')) {
+                return unauthorizedResponse();
+            }
+            if (authData.type === 'user' && authData.userId !== order.userId.toString()) {
+                return unauthorizedResponse();
+            }
+        }
+        // If order.userId is null/undefined, it is a Guest Order -> Allow access with ID
 
         return successResponse(order, 'Order fetched successfully');
 

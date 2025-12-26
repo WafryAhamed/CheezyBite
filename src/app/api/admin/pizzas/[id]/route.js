@@ -37,6 +37,10 @@ export async function PUT(request, { params }) {
             return notFoundResponse('Pizza');
         }
 
+        // Real-time Update
+        const { emitSocketEvent } = await import('@/lib/socketBridge');
+        await emitSocketEvent('menu_updated', { type: 'update', pizza }, 'menu-updates');
+
         return successResponse(pizza, 'Pizza updated successfully');
 
     } catch (error) {
@@ -67,6 +71,10 @@ export async function DELETE(request, { params }) {
             return notFoundResponse('Pizza');
         }
 
+        // Real-time Update
+        const { emitSocketEvent } = await import('@/lib/socketBridge');
+        await emitSocketEvent('menu_updated', { type: 'delete', pizzaId: parseInt(id) }, 'menu-updates');
+
         return successResponse(null, 'Pizza deleted successfully');
 
     } catch (error) {
@@ -95,6 +103,10 @@ export async function PATCH(request, { params }) {
 
         pizza.enabled = !pizza.enabled;
         await pizza.save();
+
+        // Real-time Update
+        const { emitSocketEvent } = await import('@/lib/socketBridge');
+        await emitSocketEvent('menu_updated', { type: 'update', pizza }, 'menu-updates');
 
         return successResponse(pizza, `Pizza ${pizza.enabled ? 'enabled' : 'disabled'} successfully`);
 

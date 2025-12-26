@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const UserSchema = new mongoose.Schema({
     email: {
@@ -22,9 +22,17 @@ const UserSchema = new mongoose.Schema({
     phone: {
         type: String,
         trim: true,
-        default: ''
+        default: '',
+        validate: {
+            validator: function (v) {
+                if (!v) return true; // Allow empty
+                // Strict Sri Lanka Format: 07XXXXXXXX or +947XXXXXXXX
+                return /^(?:\+94|0)7\d{8}$/.test(v);
+            },
+            message: props => `${props.value} is not a valid Sri Lankan phone number! Use 07XXXXXXXX or +947XXXXXXXX.`
+        }
     },
-    phone_verified: {
+    emailVerified: {
         type: Boolean,
         default: false
     },
@@ -59,6 +67,11 @@ const UserSchema = new mongoose.Schema({
             default: false
         }
     }],
+    role: {
+        type: String,
+        enum: ['Customer', 'Delivery', 'Manager', 'Super Admin'],
+        default: 'Customer'
+    },
     createdAt: {
         type: Date,
         default: Date.now
@@ -66,15 +79,22 @@ const UserSchema = new mongoose.Schema({
     updatedAt: {
         type: Date,
         default: Date.now
+    },
+    resetPasswordToken: {
+        type: String,
+        default: undefined
+    },
+    resetPasswordExpires: {
+        type: Date,
+        default: undefined
     }
 }, {
     timestamps: true
 });
 
 // Update timestamp on save
-UserSchema.pre('save', function (next) {
+UserSchema.pre('save', function () {
     this.updatedAt = Date.now();
-    next();
 });
 
-export default mongoose.models.User || mongoose.model('User', UserSchema);
+module.exports = mongoose.models.User || mongoose.model('User', UserSchema);

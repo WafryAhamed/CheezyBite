@@ -33,6 +33,32 @@ app.get('/health', (req, res) => {
     });
 });
 
+// Internal Bridge Endpoint for Next.js API Routes
+app.post('/internal/emit', (req, res) => {
+    const { event, data, room } = req.body;
+    const secret = req.headers['x-internal-secret'];
+
+    // Simple security check
+    if (secret !== (process.env.INTERNAL_SECRET || 'super-secret-internal-key')) {
+        return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    if (!event || !data) {
+        return res.status(400).json({ error: 'Missing event or data' });
+    }
+
+    // Emit logic
+    if (room) {
+        io.to(room).emit(event, data);
+        console.log(`📡 Bridge: Emitted '${event}' to room '${room}'`);
+    } else {
+        io.emit(event, data);
+        console.log(`📡 Bridge: Broadcasted '${event}'`);
+    }
+
+    res.json({ success: true });
+});
+
 // Socket.IO connection handling
 io.on('connection', (socket) => {
     console.log(`✅ Client connected: ${socket.id}`);
@@ -54,6 +80,18 @@ io.on('connection', (socket) => {
     socket.on('admin:orders', () => {
         socket.join('admin-orders');
         console.log(`📋 Admin ${socket.id} joined orders room`);
+    });
+
+    // User specific room (optional)
+    socket.on('join_user_room', (userId) => {
+        socket.join(`user-${userId}`);
+        console.log(`👤 User joined room: user-${userId}`);
+    });
+
+    // Customer subscribes to menu updates
+    socket.on('menu:subscribe', () => {
+        socket.join('menu-updates');
+        console.log(`🍕 Client ${socket.id} subscribed to menu updates`);
     });
 
     // Disconnect handling

@@ -69,6 +69,10 @@ export async function POST(request) {
             id: nextId
         });
 
+        // Real-time Update
+        const { emitSocketEvent } = await import('@/lib/socketBridge');
+        await emitSocketEvent('menu_updated', { type: 'add', pizza }, 'menu-updates');
+
         return successResponse(pizza, 'Pizza created successfully', 201);
 
     } catch (error) {

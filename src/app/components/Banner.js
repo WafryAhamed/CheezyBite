@@ -27,7 +27,7 @@ const Banner = () => {
             {/* Trust Badge */}
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 mb-6 mt-4 lg:mt-0">
               <span className="text-secondary text-lg">★</span>
-              <span className="text-white/90 text-sm font-medium">Delivery Available Only in Colombo</span>
+              <span className="text-white/90 text-sm font-medium">Premium pizzas made fresh to order</span>
             </div>
 
             {/* Primary Headline - Fade In + Up 12px */}
@@ -37,7 +37,7 @@ const Banner = () => {
               transition={{ duration: 0.25, ease: "easeOut" }}
               className="text-3xl sm:text-4xl lg:text-6xl font-poppins font-bold text-white drop-shadow-lg leading-tight mb-8"
             >
-              Where Every Bite <span className="text-secondary">Arrives Perfect</span>
+              Where Every Bite <span className="text-secondary">Feels Like Home</span>
             </motion.h1>
 
             {/* Subtext - Fade In Only (Delayed) */}
@@ -47,7 +47,7 @@ const Banner = () => {
               transition={{ duration: 0.2, delay: 0.08 }}
               className="text-white/80 text-base sm:text-lg font-inter font-medium mb-8 whitespace-nowrap"
             >
-              • Hot & fresh • Fast delivery • Secure payments
+              Fresh pizzas, baked hot and delivered fast
             </motion.p>
 
             {/* CTA Buttons - Static Entry, Scalable Interaction */}
@@ -84,19 +84,19 @@ const Banner = () => {
                 <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span>Free Delivery</span>
+                <span>Oven-fresh taste</span>
               </div>
               <div className="flex items-center gap-2">
                 <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span>30-Min Guarantee</span>
+                <span>Reliable delivery</span>
               </div>
               <div className="flex items-center gap-2">
                 <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span>Fresh Ingredients</span>
+                <span>Secure checkout</span>
               </div>
             </div>
           </div>
@@ -138,7 +138,7 @@ const Banner = () => {
 
               {/* Floating Badge */}
               <div className="absolute -bottom-4 -right-4 lg:bottom-8 lg:right-0 bg-primary text-white rounded-full p-4 shadow-xl hidden sm:flex flex-col items-center justify-center w-24 h-24 lg:w-28 lg:h-28">
-                <span className="text-xs font-medium uppercase">From</span>
+                <span className="text-xs font-medium uppercase">Starting at</span>
                 <span className="text-xl lg:text-2xl font-bangers">Rs. 1,390</span>
               </div>
             </div>

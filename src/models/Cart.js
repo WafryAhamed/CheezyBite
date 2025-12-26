@@ -5,7 +5,8 @@ const CartSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true,
-        unique: true
+        unique: true,
+        index: true
     },
     items: [{
         cartLineId: {
@@ -46,22 +47,9 @@ const CartSchema = new mongoose.Schema({
             name: String,
             price: Number
         }]
-    }],
-    updatedAt: {
-        type: Date,
-        default: Date.now
-    }
+    }]
 }, {
     timestamps: true
 });
-
-// Update timestamp on save
-CartSchema.pre('save', function (next) {
-    this.updatedAt = Date.now();
-    next();
-});
-
-// Index for faster lookups
-CartSchema.index({ userId: 1 });
 
 export default mongoose.models.Cart || mongoose.model('Cart', CartSchema);

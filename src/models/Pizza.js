@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const PizzaSchema = new mongoose.Schema({
     id: {
@@ -61,6 +61,28 @@ const PizzaSchema = new mongoose.Schema({
     toppingIds: [{
         type: Number
     }],
+    discount: {
+        type: {
+            type: String,
+            enum: ['fixed', 'percent', 'none'],
+            default: 'none'
+        },
+        value: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
+        active: {
+            type: Boolean,
+            default: false
+        },
+        startAt: {
+            type: Date
+        },
+        endAt: {
+            type: Date
+        }
+    },
     createdAt: {
         type: Date,
         default: Date.now
@@ -74,13 +96,12 @@ const PizzaSchema = new mongoose.Schema({
 });
 
 // Update timestamp on save
-PizzaSchema.pre('save', function (next) {
+PizzaSchema.pre('save', function () {
     this.updatedAt = Date.now();
-    next();
 });
 
 // Index for faster queries
 PizzaSchema.index({ enabled: 1, category: 1 });
-PizzaSchema.index({ id: 1 });
 
-export default mongoose.models.Pizza || mongoose.model('Pizza', PizzaSchema);
+
+module.exports = mongoose.models.Pizza || mongoose.model('Pizza', PizzaSchema);

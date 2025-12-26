@@ -5,14 +5,23 @@ import { OrderContext } from '../../../context/OrderContext';
 import { Package, Clock, MapPin, CheckCircle, Phone, ChefHat, Flame, Truck, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import SupportCard from '../../../components/SupportCard';
+import { useSocket } from '../../../context/SocketContext';
+import toast from 'react-hot-toast';
+import { formatTime, formatRelativeTime } from '@/utils/dateFormatter';
 
 const OrderPage = ({ params }) => {
     const { orderId } = React.use(params);
-    const { activeOrder, stageMessages, cancelOrder } = useContext(OrderContext);
-    const [orders, setOrders] = useState([]);
 
-    // We check activeOrder first, then localStorage history for "past" orders
+    // Fetch initial order data before any other hooks
     const [currentOrder, setCurrentOrder] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    const { activeOrder, stageMessages, cancelOrder } = useContext(OrderContext);
+
+    // Socket.IO Integration - MUST be called before useState hooks
+    const { socket, connect, subscribeToOrder, isConnected } = useSocket();
+
+    const [orders, setOrders] = useState([]);
 
     // Feedback State
     const [rating, setRating] = useState(0);
@@ -20,17 +29,178 @@ const OrderPage = ({ params }) => {
     const [isFeedbackSubmitted, setIsFeedbackSubmitted] = useState(false);
 
     useEffect(() => {
-        if (activeOrder && activeOrder.id === orderId) {
-            setCurrentOrder(activeOrder);
-        } else {
-            // Fallback: Check History
-            const history = JSON.parse(localStorage.getItem('cheezybite_orders') || '[]');
-            const found = history.find(o => o.id === orderId);
-            if (found) setCurrentOrder(found);
-        }
+        const fetchOrder = async () => {
+            try {
+                // Step 1: Check activeOrder (current context)
+                if (activeOrder && activeOrder.id === orderId) {
+                    setCurrentOrder(activeOrder);
+                    setLoading(false);
+                    return;
+                }
+
+                // Step 2: Try direct order fetch FIRST (for both logged-in and guest users)
+                // This prevents race conditions where order exists but not yet in list
+                try {
+                    const response = await fetch(`/api/orders/${orderId}`, {
+                        method: 'GET',
+                        credentials: 'include',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success && result.data) {
+                            setCurrentOrder(result.data);
+                            setLoading(false);
+                            return;
+                        }
+                    }
+                } catch (directFetchError) {
+                    console.log('Direct order fetch failed, trying list endpoint', directFetchError);
+                }
+
+                // Step 3: Fallback to list endpoint (for logged-in users)
+                try {
+                    const response = await fetch('/api/orders', {
+                        method: 'GET',
+                        credentials: 'include',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        const orders = result.data || [];
+                        const orderFromAPI = orders.find(o => o.id === orderId);
+
+                        if (orderFromAPI) {
+                            setCurrentOrder(orderFromAPI);
+                            setLoading(false);
+                            return;
+                        }
+                    }
+                } catch (apiError) {
+                    console.log('List API fetch failed', apiError);
+                }
+
+                // Order not found after all attempts
+                console.warn(`Order ${orderId} not found`);
+                setCurrentOrder(null);
+
+            } catch (error) {
+                console.error('Error fetching order:', error);
+                setCurrentOrder(null);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchOrder();
     }, [orderId, activeOrder]);
 
-    if (!currentOrder) {
+    useEffect(() => {
+        // Only set up socket listeners if we have currentOrder
+        if (!currentOrder || !orderId) return;
+
+        // 1. Connect and Subscribe
+        connect();
+        subscribeToOrder(orderId);
+
+        // 2. Polling Fallback (if socket disconnects)
+        let pollingInterval = null;
+
+        const startPolling = () => {
+            // Poll every 10 seconds
+            pollingInterval = setInterval(async () => {
+                try {
+                    const response = await fetch('/api/orders', {
+                        method: 'GET',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        const orders = result.data || [];
+                        const updatedOrder = orders.find(o => o.id === orderId);
+
+                        if (updatedOrder) {
+                            setCurrentOrder(prev => {
+                                // Only update if status changed
+                                if (prev.currentStage !== updatedOrder.currentStage) {
+                                    toast.success(`Order Updated: ${updatedOrder.status}`, {
+                                        icon: '🔄',
+                                        duration: 3000
+                                    });
+                                }
+                                return updatedOrder;
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error('Polling error:', error);
+                }
+            }, 10000); // 10 seconds
+        };
+
+        // Start polling if socket not connected
+        if (!isConnected) {
+            console.log('Socket not connected, starting polling fallback');
+            startPolling();
+        }
+
+        // 3. Listen for Socket Updates
+        if (socket && isConnected) {
+            const handleUpdate = (data) => {
+                console.log("Order Update Received:", data);
+                setCurrentOrder(prev => ({
+                    ...prev,
+                    status: data.status,
+                    currentStage: data.currentStage,
+                    // If delivered, update delivery time
+                    ...(data.currentStage === 4 ? {
+                        actualDeliveryTime: data.timestamp || new Date()
+                    } : {})
+                }));
+
+                toast.success(`Order Updated: ${data.status}`, {
+                    icon: '🚀',
+                    duration: 4000
+                });
+            };
+
+            const handleDelivery = (data) => {
+                setCurrentOrder(prev => ({
+                    ...prev,
+                    status: 'Delivered',
+                    currentStage: 4,
+                    actualDeliveryTime: data.timestamp
+                }));
+                toast.success("Order Delivered! Enjoy!", { icon: '🎉' });
+            };
+
+            socket.on('order:update', handleUpdate);
+            socket.on('order:delivered', handleDelivery);
+            socket.on('order:statusChanged', handleUpdate);
+
+            return () => {
+                socket.off('order:update', handleUpdate);
+                socket.off('order:delivered', handleDelivery);
+                socket.off('order:statusChanged', handleUpdate);
+                if (pollingInterval) clearInterval(pollingInterval);
+            };
+        }
+
+        return () => {
+            if (pollingInterval) clearInterval(pollingInterval);
+        };
+    }, [orderId, socket, isConnected, connect, subscribeToOrder, currentOrder]);
+
+    // Show loading state - all hooks already called above
+    if (loading) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center text-ashWhite">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
@@ -39,10 +209,24 @@ const OrderPage = ({ params }) => {
         );
     }
 
+    // Show error if order not found
+    if (!currentOrder) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center text-ashWhite container mx-auto px-4">
+                <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
+                <h1 className="text-3xl font-bold mb-2">Order Not Found</h1>
+                <p className="text-ashWhite/60 mb-8">
+                    We couldn't find order <span className="text-primary">#{orderId}</span>
+                </p>
+                <Link href="/menu" className="bg-primary hover:bg-secondary text-black px-6 py-2 rounded-lg font-bold transition">
+                    Back to Shop
+                </Link>
+            </div>
+        );
+    }
+
     const { currentStage, items, total, address } = currentOrder;
     const currentStageIndex = currentOrder.currentStage || 0;
-
-
 
     const handleFeedbackSubmit = () => { // Fixed hooks duplicate issue
         if (rating === 0) return;
@@ -84,7 +268,6 @@ const OrderPage = ({ params }) => {
             <div className="text-ashWhite/60 mb-8 flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-primary" />
                 <span>{address?.street}, {address?.city} {address?.phone && `(${address.phone})`}</span>
-                <span>{address?.street}, {address?.city} {address?.phone && `(${address.phone})`}</span>
             </div>
 
             {/* Delivery Instructions Display */}
@@ -121,12 +304,17 @@ const OrderPage = ({ params }) => {
                                     <h3 className={`font-bold capitalize text-sm md:text-base ${isActive ? 'text-ashWhite' : 'text-ashWhite/40'}`}>
                                         {step.name}
                                     </h3>
-                                    {isActive && (
-                                        <span className="text-xs text-secondary font-bold block mt-1">
-                                            {/* Mock Timestamp relative to start? Using generic "Just now" for simplicity or could store timestamps in order */}
-                                            {index === currentStageIndex ? 'Current Step' : 'Completed'}
-                                        </span>
-                                    )}
+                                    {isActive && (() => {
+                                        // Find timestamp from statusHistory
+                                        const historyEntry = currentOrder.statusHistory?.find(h => h.stage === index);
+                                        const timestamp = historyEntry?.timestamp;
+
+                                        return (
+                                            <span className="text-xs text-secondary font-bold block mt-1">
+                                                {timestamp ? formatRelativeTime(timestamp) : (index === currentStageIndex ? 'Current Step' : 'Completed')}
+                                            </span>
+                                        );
+                                    })()}
                                 </div>
                             </div>
                         )

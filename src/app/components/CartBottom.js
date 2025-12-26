@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import { CartContext } from "../context/CartContext";
 import { UserContext } from "../context/UserContext"; // Import UserContext
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import AuthModal from "./AuthModal"; // Reuse AuthModal
 
 const CartBottom = () => {
@@ -9,13 +9,17 @@ const CartBottom = () => {
   const { user } = useContext(UserContext); // Get user
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleCheckout = () => {
     if (!user) {
       setAuthModalOpen(true);
     } else {
       setIsOpen(false);
-      router.push('/checkout');
+      // Preserve coupon param if present
+      const couponParam = searchParams?.get('coupon');
+      const checkoutUrl = couponParam ? `/checkout?coupon=${couponParam}` : '/checkout';
+      router.push(checkoutUrl);
     }
   };
 

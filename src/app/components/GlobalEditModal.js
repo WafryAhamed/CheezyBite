@@ -5,7 +5,8 @@ import Modal from 'react-modal';
 import { X } from 'lucide-react';
 import { CartContext } from '../context/CartContext';
 import PizzaDetails from './PizzaDetails';
-import { getPizzas } from '../utils/pizzaStore';
+// import { getPizzas } from '../utils/pizzaStore';
+import api from '@/services/apiClient';
 
 const modalStyles = {
     overlay: {
@@ -17,13 +18,40 @@ const modalStyles = {
 const GlobalEditModal = () => {
     const { editingItem, setEditingItem } = useContext(CartContext);
     const [fullPizza, setFullPizza] = useState(null);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
+        const fetchPizzaDetails = async () => {
+            if (!editingItem) return;
+
+            setLoading(true);
+            try {
+                // Fetch Pizza and Toppings
+                const [pizzaRes, toppingsRes] = await Promise.all([
+                    api.get(`/pizzas/${editingItem.id}`),
+                    api.get('/toppings') // We need all toppings for customization
+                ]);
+
+                if (pizzaRes.success && toppingsRes.success) {
+                    const activeToppings = toppingsRes.data.filter(t => t.enabled);
+                    const pizza = {
+                        ...pizzaRes.data,
+                        toppings: activeToppings
+                    };
+                    setFullPizza(pizza);
+                } else {
+                    console.error("Failed to load pizza details");
+                    setFullPizza(null);
+                }
+            } catch (error) {
+                console.error("Error fetching pizza for edit:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         if (editingItem) {
-            // Find full pizza details to pass to PizzaDetails (which needs toppings list, prices etc.)
-            const allPizzas = getPizzas();
-            const pizza = allPizzas.find(p => p.id === editingItem.id);
-            setFullPizza(pizza);
+            fetchPizzaDetails();
         } else {
             setFullPizza(null);
         }
@@ -33,7 +61,8 @@ const GlobalEditModal = () => {
         setEditingItem(null);
     };
 
-    if (!editingItem || !fullPizza) return null;
+    if (!editingItem) return null;
+    if (loading || !fullPizza) return null; // Or show a loader
 
     return (
         <Modal

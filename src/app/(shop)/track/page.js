@@ -1,12 +1,21 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Truck, Search } from 'lucide-react';
 
 export default function TrackOrderPage() {
     const [orderId, setOrderId] = useState('');
     const router = useRouter();
+    const searchParams = useSearchParams();
+
+    // Auto-redirect if order ID is in URL query (from checkout)
+    useEffect(() => {
+        const urlOrderId = searchParams?.get('id');
+        if (urlOrderId) {
+            router.push(`/order/${urlOrderId}`);
+        }
+    }, [searchParams, router]);
 
     const handleTrack = (e) => {
         e.preventDefault();

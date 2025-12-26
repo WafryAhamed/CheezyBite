@@ -94,7 +94,7 @@ const Nav = () => {
                 <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center border border-primary/40 overflow-hidden relative group-hover:border-primary transition-colors">
                   {user.photo ? <Image src={user.photo} fill alt="User" className="object-cover" /> : <User className="w-4 h-4 text-primary group-hover:text-secondary transition-colors" />}
                 </div>
-                <span className="group-hover:text-secondary transition-colors">{user.name.split(' ')[0]}</span>
+                <span className="group-hover:text-secondary transition-colors">{user.name?.split(' ')[0] || 'User'}</span>
               </Link>
             ) : (
               <button

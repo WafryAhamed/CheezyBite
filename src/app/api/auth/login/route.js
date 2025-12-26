@@ -3,9 +3,10 @@
  * POST /api/auth/login
  */
 
+import { cookies } from 'next/headers';
 import dbConnect from '@/lib/dbConnect';
 import User from '@/models/User';
-import { comparePassword, generateToken } from '@/lib/auth';
+import { comparePassword, generateToken, setAuthCookie } from '@/lib/auth';
 import { validateUserLogin } from '@/lib/validators';
 import { successResponse, errorResponse, validationErrorResponse, serverErrorResponse } from '@/lib/apiResponse';
 
@@ -36,6 +37,10 @@ export async function POST(request) {
             return errorResponse('Invalid email or password', null, 401);
         }
 
+        if (!user.emailVerified) {
+            return errorResponse('Email not verified', { requireVerification: true, email: user.email }, 403);
+        }
+
         // Generate JWT token
         const token = generateToken({
             userId: user._id,
@@ -52,6 +57,11 @@ export async function POST(request) {
             phone_verified: user.phone_verified,
             addresses: user.addresses
         };
+
+        // Set HttpOnly Cookie
+        const cookieStore = await cookies();
+        const cookieOptions = setAuthCookie(token);
+        cookieStore.set(cookieOptions);
 
         return successResponse(
             { user: userData, token },

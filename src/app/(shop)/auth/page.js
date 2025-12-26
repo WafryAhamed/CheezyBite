@@ -3,9 +3,113 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Mail, Lock, User, ArrowRight } from 'lucide-react';
+import { useUser } from '../../context/UserContext';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { authService } from '@/services/authService';
+import toast from 'react-hot-toast';
 
 export default function AuthPage() {
     const [isLogin, setIsLogin] = useState(true);
+    const { login, register, loginWithGoogle } = useUser();
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    // Get redirect param (e.g., /auth?redirect=/checkout)
+    const redirectUrl = searchParams.get('redirect') || '/';
+
+    const [step, setStep] = useState('details'); // 'details' | 'otp'
+    const [otp, setOtp] = useState('');
+    const [isVerifying, setIsVerifying] = useState(false);
+
+    // Form Data
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        password: ''
+    });
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleAuthAction = async (e) => {
+        e.preventDefault();
+        setIsVerifying(true);
+
+        if (isLogin) {
+            // LOGIN FLOW
+            const result = await login(formData.email, formData.password);
+            if (result.success) {
+                // Redirect to intended page or home
+                router.push(redirectUrl);
+            } else if (result.requireVerification) {
+                // User exists but invalid email
+                toast('Please verify your email to continue', { icon: '📧' });
+                try {
+                    await authService.requestOtp(formData.email, 'email_verification');
+                    setStep('otp');
+                } catch (err) {
+                    toast.error("Failed to send verification code");
+                }
+            }
+        } else {
+            // SIGNUP FLOW
+            // 1. Create Account
+            const result = await register(formData.name, formData.email, formData.password);
+
+            if (result.success) {
+                if (result.requireVerification) {
+                    // 2. Request OTP
+                    try {
+                        await authService.requestOtp(formData.email, 'signup');
+                        setStep('otp');
+                    } catch (err) {
+                        toast.error("Account created but failed to send OTP. Try logging in.");
+                        setIsLogin(true);
+                    }
+                } else {
+                    // Should not happen with new strict rules, but fallback
+                    router.push(redirectUrl);
+                }
+            }
+        }
+        setIsVerifying(false);
+    };
+
+    const handleVerifyOtp = async (e) => {
+        e.preventDefault();
+        setIsVerifying(true);
+        try {
+            // Determine purpose
+            // If we were logging in, purpose is 'email_verification' (or 'login' if 2FA)
+            // If we were signing up, purpose is 'signup'
+            const purpose = isLogin ? 'email_verification' : 'signup';
+
+            // Verify OTP
+            const verifyResponse = await authService.verifyOtp(formData.email, purpose, otp);
+
+            if (verifyResponse.success) {
+                toast.success("Email verified successfully!");
+
+                // Auto Login after verification
+                const loginResult = await login(formData.email, formData.password);
+                if (loginResult.success) {
+                    // Redirect to intended page or home
+                    router.push(redirectUrl);
+                } else {
+                    // Fallback if auto-login fails
+                    setIsLogin(true);
+                    setStep('details');
+                    toast("Please login with your credentials");
+                }
+            }
+        } catch (error) {
+            console.error("Verification failed", error);
+            toast.error(error.message || "Verification failed");
+        }
+        setIsVerifying(false);
+    };
+
+    const handleSubmit = handleAuthAction;
 
     return (
         <div className='container mx-auto px-4 pt-24 pb-12 min-h-screen flex items-center justify-center'>
@@ -13,71 +117,122 @@ export default function AuthPage() {
                 {/* Header */}
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold text-ashWhite mb-2">
-                        {isLogin ? 'Welcome Back' : 'Create Account'}
+                        {isLogin ? 'Welcome Back' : (step === 'otp' ? 'Verify Email' : 'Create Account')}
                     </h1>
                     <p className="text-ashWhite/60">
-                        {isLogin ? 'Login to access your saved orders' : 'Join CheezyBite for exclusive offers'}
+                        {isLogin ? 'Login to access your saved orders' : (step === 'otp' ? `Enter code sent to ${formData.email}` : 'Join CheezyBite for exclusive offers')}
                     </p>
                 </div>
 
-                {/* Form */}
-                <form className="space-y-4">
-                    {!isLogin && (
+                {/* OTP Form */}
+                {!isLogin && step === 'otp' || (isLogin && step === 'otp') ? (
+                    <form onSubmit={handleVerifyOtp} className="space-y-4">
                         <div className="relative">
-                            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-ashWhite/50 w-5 h-5" />
-                            <input type="text" placeholder="Full Name" className="w-full bg-charcoalBlack border border-cardBorder rounded-xl pl-12 pr-4 py-3 text-ashWhite focus:border-primary focus:ring-1 focus:ring-primary outline-none" />
+                            <input
+                                value={otp}
+                                onChange={(e) => setOtp(e.target.value)}
+                                type="text"
+                                placeholder="Enter 6-digit Code"
+                                maxLength={6}
+                                className="w-full bg-charcoalBlack border border-cardBorder rounded-xl px-4 py-3 text-ashWhite text-center text-2xl tracking-widest focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                                autoFocus
+                            />
                         </div>
-                    )}
-                    <div className="relative">
-                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-ashWhite/50 w-5 h-5" />
-                        <input type="email" placeholder="Email Address" className="w-full bg-charcoalBlack border border-cardBorder rounded-xl pl-12 pr-4 py-3 text-ashWhite focus:border-primary focus:ring-1 focus:ring-primary outline-none" />
-                    </div>
-                    <div className="relative">
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-ashWhite/50 w-5 h-5" />
-                        <input type="password" placeholder="Password" className="w-full bg-charcoalBlack border border-cardBorder rounded-xl pl-12 pr-4 py-3 text-ashWhite focus:border-primary focus:ring-1 focus:ring-primary outline-none" />
-                    </div>
+                        <button disabled={isVerifying} type="submit" className="w-full btn btn-lg bg-primary hover:bg-primaryHover text-white py-3 rounded-xl font-bold shadow-lg hover:shadow-primary/20 flex items-center justify-center gap-2">
+                            {isVerifying ? 'Verifying...' : 'Verify & Create Account'}
+                        </button>
+                        <button type="button" onClick={() => setStep('details')} className="w-full text-sm text-ashWhite/50 hover:text-ashWhite mt-2 text-center block">
+                            Back to Details
+                        </button>
+                    </form>
+                ) : (
+                    /* Details Form */
+                    <>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            {!isLogin && (
+                                <div className="relative">
+                                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-ashWhite/50 w-5 h-5" />
+                                    <input
+                                        name="name"
+                                        value={formData.name}
+                                        onChange={handleChange}
+                                        type="text"
+                                        placeholder="Full Name"
+                                        className="w-full bg-charcoalBlack border border-cardBorder rounded-xl pl-12 pr-4 py-3 text-ashWhite focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                                    />
+                                </div>
+                            )}
+                            <div className="relative">
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-ashWhite/50 w-5 h-5" />
+                                <input
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    type="email"
+                                    placeholder="Email Address"
+                                    className="w-full bg-charcoalBlack border border-cardBorder rounded-xl pl-12 pr-4 py-3 text-ashWhite focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                                />
+                            </div>
+                            <div className="relative">
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-ashWhite/50 w-5 h-5" />
+                                <input
+                                    name="password"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    type="password"
+                                    placeholder="Password"
+                                    className="w-full bg-charcoalBlack border border-cardBorder rounded-xl pl-12 pr-4 py-3 text-ashWhite focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                                />
+                            </div>
 
-                    <div className="flex items-center justify-between text-sm">
-                        <label className="flex items-center gap-2 cursor-pointer text-ashWhite/70">
-                            <input type="checkbox" className="accent-primary rounded" />
-                            Remember me
-                        </label>
-                        {isLogin && (
-                            <Link href="#" className="text-primary hover:text-primaryHover hover:underline">
-                                Forgot Password?
-                            </Link>
-                        )}
-                    </div>
+                            <div className="flex items-center justify-between text-sm">
+                                <label className="flex items-center gap-2 cursor-pointer text-ashWhite/70">
+                                    <input type="checkbox" className="accent-primary rounded" />
+                                    Remember me
+                                </label>
+                                {isLogin && (
+                                    <Link href="#" className="text-primary hover:text-primaryHover hover:underline">
+                                        Forgot Password?
+                                    </Link>
+                                )}
+                            </div>
 
-                    <button className="w-full btn btn-lg bg-primary hover:bg-primaryHover text-white py-3 rounded-xl font-bold shadow-lg hover:shadow-primary/20 flex items-center justify-center gap-2">
-                        {isLogin ? 'Login' : 'Sign Up'}
-                        <ArrowRight className="w-5 h-5" />
-                    </button>
-                </form>
+                            <button disabled={isVerifying} className="w-full btn btn-lg bg-primary hover:bg-primaryHover text-white py-3 rounded-xl font-bold shadow-lg hover:shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50">
+                                {isVerifying ? 'Processing...' : (isLogin ? 'Login' : 'Sign Up')}
+                                <ArrowRight className="w-5 h-5" />
+                            </button>
+                        </form>
 
-                {/* Divider */}
-                <div className="my-6 border-t border-cardBorder relative">
-                    <span className="absolute left-1/2 -translate-x-1/2 -top-3 bg-softBlack px-4 text-ashWhite/40 text-sm">
-                        Or continue with
-                    </span>
-                </div>
+                        {/* Divider */}
+                        <div className="my-6 border-t border-cardBorder relative">
+                            <span className="absolute left-1/2 -translate-x-1/2 -top-3 bg-softBlack px-4 text-ashWhite/40 text-sm">
+                                Or continue with
+                            </span>
+                        </div>
 
-                {/* Social Auth */}
-                <div className="grid grid-cols-2 gap-4">
-                    <button className="flex items-center justify-center gap-2 bg-charcoalBlack border border-cardBorder py-2.5 rounded-xl text-ashWhite hover:bg-white/5 transition-colors">
-                        <GoogleIcon className="w-5 h-5" />
-                        Google
-                    </button>
-                    <button className="flex items-center justify-center gap-2 bg-charcoalBlack border border-cardBorder py-2.5 rounded-xl text-ashWhite hover:bg-white/5 transition-colors">
-                        <FacebookIcon className="w-5 h-5 text-blue-500" />
-                        Facebook
-                    </button>
-                </div>
+                        {/* Social Auth */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <button
+                                onClick={async () => {
+                                    const success = await loginWithGoogle();
+                                    if (success) router.push(redirectUrl);
+                                }}
+                                className="flex items-center justify-center gap-2 bg-charcoalBlack border border-cardBorder py-2.5 rounded-xl text-ashWhite hover:bg-white/5 transition-colors">
+                                <GoogleIcon className="w-5 h-5" />
+                                Google
+                            </button>
+                            <button className="flex items-center justify-center gap-2 bg-charcoalBlack border border-cardBorder py-2.5 rounded-xl text-ashWhite hover:bg-white/5 transition-colors">
+                                <FacebookIcon className="w-5 h-5 text-blue-500" />
+                                Facebook
+                            </button>
+                        </div>
+                    </>
+                )}
 
                 {/* Toggle */}
                 <div className="text-center mt-8 text-ashWhite/70">
                     {isLogin ? "Don't have an account? " : "Already have an account? "}
-                    <button onClick={() => setIsLogin(!isLogin)} className="text-primary font-bold hover:underline">
+                    <button onClick={() => { setIsLogin(!isLogin); setStep('details'); }} className="text-primary font-bold hover:underline">
                         {isLogin ? 'Sign Up' : 'Login'}
                     </button>
                 </div>
