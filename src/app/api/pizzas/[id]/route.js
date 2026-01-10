@@ -1,6 +1,6 @@
 /**
- * API Route: Get Single Pizza
- * GET /api/pizzas/[id]
+  API Route: Get Single Pizza
+ GET /api/pizzas/[id]
  */
 
 import dbConnect from '@/lib/dbConnect';
